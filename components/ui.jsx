@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
-import { readAuth, subscribeAuth } from '@/lib/client-api'
+import { clientApi, readAuth, subscribeAuth } from '@/lib/client-api'
 import { rolesFor, staffLanding } from '@/lib/staff-access'
 import { useDemoPortals } from './DemoPortalGate'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
@@ -239,8 +239,9 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
             <b className="text-white">For temples</b><br/>
             <Link href="/submit-temple" className="hover:text-white">Submit a temple</Link><br/>
             <Link href="/login?next=/account/listings/new&intent=create-profile" className="hover:text-white">Create a profile</Link><br/>
-            {demoPortals && <><Link href="/vendor" className="hover:text-white">Temple login</Link><br/></>}
-            {demoPortals && <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link>}
+            <Link href="/vendor" className="hover:text-white">Temple login</Link><br/>
+            <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link><br/>
+            <Link href="/support" className="hover:text-white">Help & support</Link>
           </div>
           <div className="text-sm">
             <b className="text-white">Partners</b><br/>
@@ -271,7 +272,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           </div>
         </div>
       </footer>
-      {demoPortals && !hideChatbot && <Chatbot />}
+      {!hideChatbot && <Chatbot />}
     </div>
   )
 }
@@ -352,51 +353,52 @@ export function DashShell(props) {
   return <Suspense fallback={<div className="min-h-screen bg-brown-50" />}><DashShellContent {...props} /></Suspense>
 }
 
-/* ── CHATBOT (RAG-style) ── */
-const kb = [
-  [/timing|time|open/i,    'Kottur Sree Mahavishnu Temple is open 5:30–9:30 AM and 5:30–7:30 PM. Source: temple page.'],
-  [/ganapathi|homam/i,     'Ganapathi Homam is ₹250, limited to 20 per day. 14 slots left for tomorrow. Want me to start a booking?'],
-  [/book|pooja/i,          'You can book on this site, on WhatsApp (+91 9495 041196) or in the app. Which temple?'],
-  [/donation|donate/i,     'Donate through the temple page and receive a receipt. Which temple would you like to support?'],
-  [/cancel|refund/i,       'Cancel or reschedule until the chart closes (8:00 PM the day before). Refunds in 5–7 days to the same method.'],
-  [/santhana|child/i,      'Santhanagopala Pooja is the temple\'s speciality — ₹1,500, 3 per day, book at least a day ahead.'],
-]
-
+/* ── CHATBOT ── answers come from the TempleAddress assistant API (published listing data only) */
 export function Chatbot() {
-  const [open, setOpen] = useState(false)
-  const [msgs, setMsgs] = useState([{ me: false, t: 'Namaskaram 🙏 I can help with timings, poojas, booking and donations. Ask in English or Malayalam.' }])
-  const [q, setQ] = useState('')
-  const ask = useCallback(text => {
-    const t = text || q; if (!t) return
-    const a = (kb.find(([r]) => r.test(t)) || [null, 'I don\'t have that yet — I\'ll pass this to devotee support on WhatsApp, or try asking about timings, poojas or donations.'])[1]
-    setMsgs(m => [...m, { me: true, t }, { me: false, t: a }]); setQ('')
-  }, [q])
+  const pathname = usePathname()
+  const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [q, setQ] = useState(''), [language, setLanguage] = useState('en')
+  const [msgs, setMsgs] = useState([]), [suggestions, setSuggestions] = useState([])
+  const slug = pathname?.match(/^\/t\/([^/]+)/)?.[1] || ''
+  useEffect(() => {
+    if (!open || msgs.length) return
+    clientApi(`assistant?language=${language}`, { auth: false }).then(data => { setMsgs([{ me: false, t: data.message }]); setSuggestions(data.suggestions) }).catch(() => setMsgs([{ me: false, t: 'Namaskaram 🙏 Ask about timings, poojas, booking or donations.' }]))
+  }, [open, language, msgs.length])
+  const ask = useCallback(async text => {
+    const t = (text || q).trim(); if (!t || busy) return
+    setMsgs(m => [...m, { me: true, t }]); setQ(''); setBusy(true)
+    try {
+      const data = await clientApi('assistant', { method: 'POST', auth: false, body: { message: t, language, listing_slug: slug } })
+      setMsgs(m => [...m, { me: false, t: data.message, listing: data.listing, handoff: data.handoff }]); setSuggestions(data.suggestions || [])
+    } catch (err) { setMsgs(m => [...m, { me: false, t: err.message || 'The assistant is unavailable right now.' }]) } finally { setBusy(false) }
+  }, [q, busy, language, slug])
   useEffect(() => {
     const h = e => { setOpen(true); if (e.detail) setTimeout(() => ask(e.detail), 250) }
     window.addEventListener('ta:ask', h); return () => window.removeEventListener('ta:ask', h)
   }, [ask])
+  // Checkout pages keep a sticky action bar in the same corner; the assistant stays out of the way there.
+  if (/^\/(book|donate)\//.test(pathname || '')) return null
   return (
     <>
       <button onClick={() => setOpen(!open)} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-brown-900 px-4 py-3 text-sm font-semibold text-white shadow-soft">
         <Sparkles size={16} className="text-gold-400"/>Ask TempleAddress
       </button>
       {open && (
-        <div className="fixed bottom-20 right-5 z-40 flex h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-brown-200">
+        <div role="dialog" aria-label="Temple assistant" className="fixed bottom-20 right-5 z-40 flex h-[480px] w-[min(360px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-brown-200">
           <div className="flex items-center gap-2 bg-brown-900 px-4 py-3 text-white">
             <Sparkles size={16} className="text-gold-400"/><b className="text-sm">Temple assistant</b>
-            <span className="ml-auto text-[10px] text-brown-200">RAG on TempleAddress data</span>
+            <button onClick={() => { setLanguage(l => l === 'en' ? 'ml' : 'en'); setMsgs([]) }} className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px]" aria-label="Switch language">{language === 'en' ? 'മലയാളം' : 'English'}</button>
             <button onClick={() => setOpen(false)} className="ml-1 rounded p-0.5 hover:bg-white/10" aria-label="Close chat"><X size={14}/></button>
           </div>
-          <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">
-            {msgs.map((m, i) => <div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me ? 'ml-auto bg-saffron-500 text-white' : 'bg-brown-50'}`}>{m.t}</div>)}
+          <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm" aria-live="polite">
+            {msgs.map((m, i) => <div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me ? 'ml-auto bg-saffron-500 text-white' : 'bg-brown-50'}`}>{m.t}{m.listing && <Link href={`/t/${m.listing.slug}`} className="mt-1 block text-xs font-semibold text-saffron-700">Open {m.listing.name_en}</Link>}{m.handoff && <Link href="/support" className="mt-1 block text-xs font-semibold text-saffron-700">Raise a support ticket</Link>}</div>)}
+            {busy && <div className="w-fit rounded-2xl bg-brown-50 px-3 py-2 text-brown-500">…</div>}
             <div className="flex flex-wrap gap-1 pt-1">
-              {['Temple timings', 'Ganapathi Homam price', 'Cancel a booking'].map(s =>
-                <button key={s} onClick={() => ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-xs hover:bg-brown-50">{s}</button>)}
+              {suggestions.slice(0, 4).map(s => <button key={s} onClick={() => ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-left text-xs hover:bg-brown-50">{s}</button>)}
             </div>
           </div>
           <form onSubmit={e => { e.preventDefault(); ask() }} className="flex gap-2 border-t border-brown-100 p-2">
-            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Ask anything…" className="input !py-2"/>
-            <button className="btn-p !px-3"><Send size={16}/></button>
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder={language === 'ml' ? 'ചോദിക്കൂ…' : 'Ask about a temple, pooja or booking…'} aria-label="Message" maxLength={500} className="input !py-2"/>
+            <button className="btn-p !px-3" disabled={busy} aria-label="Send"><Send size={16}/></button>
           </form>
         </div>
       )}

@@ -8,7 +8,7 @@ import { CreditCard, Phone, Download, Printer, Share2 } from 'lucide-react'
 import { API_ORIGIN } from '@/lib/api'
 import { clientApi, isVerifiedUser, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
 import StarSelect from './StarSelect'
-import { earliestDate, indiaDate } from '@/lib/booking-dates'
+import { earliestDate, indiaDate, recurringDates } from '@/lib/booking-dates'
 import OtpInput from './OtpInput'
 import styles from './Template.module.css'
 
@@ -34,11 +34,11 @@ async function openPayment({ booking, config, user, mode }) {
   if (config?.payment_mode === 'mock') {
     return clientApi(`dev/payment-orders/${booking.payment_order.uuid}/authorize`, { method: 'POST', body: { method: 'upi' } })
   }
-  if (!config?.razorpay_key_id || !booking.payment_order.provider_order_id) throw new Error('Razorpay is not configured.')
+  if (!(booking.payment_order.key_id || config?.razorpay_key_id) || !booking.payment_order.provider_order_id) throw new Error('Razorpay is not configured.')
   await loadRazorpay()
   return new Promise((resolve, reject) => {
     const checkout = new window.Razorpay({
-      key: config.razorpay_key_id,
+      key: booking.payment_order.key_id || config.razorpay_key_id,
       order_id: booking.payment_order.provider_order_id,
       amount: Math.round(Number(booking.amount_total) * 100),
       currency: booking.currency,
@@ -57,7 +57,17 @@ async function openPayment({ booking, config, user, mode }) {
 }
 
 const STEPS = { booking: ['Pooja', 'Contact', 'Verify', 'Summary'], donation: ['Donation', 'Contact', 'Verify', 'Summary'] }
-const PRASADAM = [['collection', 'Collect at temple counter'], ['not_applicable', 'Not applicable']]
+const deliveryLabel = snapshot => !snapshot?.method ? '—' : snapshot.method === 'collection' ? 'Counter collection' : snapshot.method === 'home_delivery' ? `Home delivery · ${snapshot.status || 'pending'}${snapshot.tracking_number ? ` · ${snapshot.courier} ${snapshot.tracking_number}` : ''}` : 'Not needed'
+const FREQUENCIES = [['weekly', 'Every week'], ['monthly', 'Every month'], ['daily', 'Every day']]
+
+// Prasadam choices a pooja offers (prasadam_details): counter collection and, where enabled, paid home delivery.
+function prasadamChoices(option) {
+  const details = option.prasadam_details || {}, home = details.home_delivery || {}
+  return [...(details.collection === false ? [] : [['collection', 'Collect at temple counter']]),
+    ...(home.enabled ? [['home_delivery', `Home delivery · ${money(home.charge || 0)} per unit${home.timeframe ? ` · ${home.timeframe}` : ''}`]] : []),
+    ['not_applicable', 'Not needed']]
+}
+
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const localMobile = value => String(value || '').replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '')
 
@@ -81,14 +91,21 @@ function AddForm({ option, me, family, stars, onAdd, onCancel, busy, error }) {
   const [star, setStar] = useState(self.star)
   const [date, setDate] = useState(option.item_type === 'special_pooja' ? option.occurrence.date : earliestDate(option))
   const [quantity, setQuantity] = useState(1)
-  const [prasadam, setPrasadam] = useState('collection')
+  const choices = prasadamChoices(option)
+  const [prasadam, setPrasadam] = useState(choices[0][0])
+  const [address, setAddress] = useState({ recipient_name: self.name, mobile: localMobile(me?.mobile_e164), address: '', pincode: '' })
+  const [repeat, setRepeat] = useState(false), [frequency, setFrequency] = useState('weekly'), [count, setCount] = useState(4)
+  const canRepeat = option.item_type === 'pooja' && !option.is_live
+  const dates = repeat && date ? recurringDates(date, frequency, Number(count) || 2) : []
+  const charge = prasadam === 'home_delivery' ? Number(option.prasadam_details?.home_delivery?.charge || 0) : 0
+  const lineTotal = (Number(option.price) + charge) * Number(quantity || 0) * (repeat ? dates.length : 1)
   function choose(value) {
     setWho(value)
     const member = family.find(row => row.uuid === value)
     if (value === 'me') { setDevotee(self.name); setStar(self.star) } else if (member) { setDevotee(member.name); setStar(member.star_value || '') } else { setDevotee(''); setStar('') }
   }
   const chip = (value, label) => <button type="button" key={value} onClick={() => choose(value)} aria-pressed={who === value} className={`rounded-full border px-3 py-1 text-sm ${who === value ? 'border-saffron-600 bg-saffron-50 font-semibold text-saffron-700' : 'border-brown-200'}`}>{label}</button>
-  return <form onSubmit={event => { event.preventDefault(); onAdd({ who, devotee_name: devotee.trim(), star_value: star, service_date: date, quantity: Number(quantity), prasadam }) }} className="mt-4 space-y-4 border-t pt-4">
+  return <form onSubmit={event => { event.preventDefault(); onAdd({ who, devotee_name: devotee.trim(), star_value: star, service_date: date, quantity: Number(quantity), prasadam: prasadam === 'home_delivery' ? { method: prasadam, ...address, mobile: `+91${localMobile(address.mobile)}` } : { method: prasadam }, recurrence: repeat ? { frequency, count: Number(count) } : null, dates }) }} className="mt-4 space-y-4 border-t pt-4">
     <div><p className="text-sm font-semibold">Who is this pooja for?</p><div className="mt-2 flex flex-wrap gap-2">{me && chip('me', `Me${self.name ? ` (${self.name})` : ''}`)}{family.map(row => chip(row.uuid, row.name))}{chip('other', 'Someone else')}</div></div>
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Devotee name"><Input value={devotee} onChange={event => setDevotee(event.target.value)} maxLength={160} required placeholder="Name for the sankalpam"/></Field>
@@ -96,11 +113,20 @@ function AddForm({ option, me, family, stars, onAdd, onCancel, busy, error }) {
       {option.item_type === 'special_pooja'
         ? <Field label="Date"><p className="input bg-brown-50">{option.occurrence.date} · {option.occurrence.start_time?.slice(0, 5)}</p></Field>
         : <Field label="Pooja date" hint={option.is_live ? 'Live pooja: today only, until its end time.' : `Book at least ${option.lead_time_hours || 0} hours ahead; tomorrow closes at 7:30 PM.`}><Input type="date" min={earliestDate(option)} max={option.is_live ? indiaDate() : undefined} value={date} onChange={event => setDate(event.target.value)} required/></Field>}
-      <Field label="Prasadam"><select className="input" value={prasadam} onChange={event => setPrasadam(event.target.value)}>{PRASADAM.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+      <Field label="Prasadam"><select className="input" value={prasadam} onChange={event => setPrasadam(event.target.value)}>{choices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
       <Field label="Quantity"><Input type="number" min="1" max="20" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
     </div>
+    {prasadam === 'home_delivery' && <fieldset className="grid gap-3 rounded-xl border border-brown-100 p-4 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold">Delivery address</legend>
+      <Field label="Recipient name"><Input value={address.recipient_name} onChange={e => setAddress(a => ({ ...a, recipient_name: e.target.value }))} maxLength={160} required/></Field>
+      <Field label="Mobile number"><Input value={address.mobile} onChange={e => setAddress(a => ({ ...a, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" pattern="[0-9]{10}" required placeholder="98765 43210"/></Field>
+      <Field label="Address" className="sm:col-span-2"><textarea className="input" rows={2} value={address.address} onChange={e => setAddress(a => ({ ...a, address: e.target.value }))} maxLength={500} required/></Field>
+      <Field label="Pincode"><Input value={address.pincode} onChange={e => setAddress(a => ({ ...a, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} inputMode="numeric" pattern="[0-9]{6}" required/></Field>
+      <p className="self-end text-xs text-brown-500">{option.prasadam_details?.home_delivery?.pincodes?.length ? `Delivers to ${option.prasadam_details.home_delivery.pincodes.length} pincode(s); we check yours before payment.` : 'Delivery availability is confirmed before payment.'}</p></fieldset>}
+    {canRepeat && <div className="rounded-xl border border-brown-100 p-4"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={repeat} onChange={e => setRepeat(e.target.checked)}/>Repeat this pooja (pay in advance for all dates)</label>
+      {repeat && <><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="How often"><select className="input" value={frequency} onChange={e => setFrequency(e.target.value)}>{FREQUENCIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field><Field label="Number of times" hint="2 to 12, first date included"><Input type="number" min="2" max="12" value={count} onChange={e => setCount(e.target.value)} required/></Field></div>
+      <p className="mt-2 text-xs text-brown-500">Dates: {dates.join(', ')}</p></>}</div>}
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-    <div className="flex gap-2"><button type="submit" disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(Number(option.price) * Number(quantity || 0))}`}</button><button type="button" disabled={busy} onClick={onCancel} className="btn-g flex-1">Cancel</button></div>
+    <div className="flex gap-2"><button type="submit" disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(lineTotal)}`}</button><button type="button" disabled={busy} onClick={onCancel} className="btn-g flex-1">Cancel</button></div>
   </form>
 }
 
@@ -178,12 +204,14 @@ export function Phase1Checkout({ mode = 'booking' }) {
 
   async function addToCart(option, line) {
     setBusy(true); setError('')
-    const item = { item_type: option.item_type, target_uuid: option.target_uuid, quantity: line.quantity, devotee_name: line.devotee_name, star_kind: line.star_value ? 'nakshatra' : '', star_value: line.star_value, prasadam: { method: line.prasadam }, ...(option.item_type === 'pooja' ? { service_date: line.service_date } : {}) }
+    const item = { item_type: option.item_type, target_uuid: option.target_uuid, quantity: line.quantity, devotee_name: line.devotee_name, star_kind: line.star_value ? 'nakshatra' : '', star_value: line.star_value, prasadam: line.prasadam, ...(option.item_type === 'pooja' ? { service_date: line.service_date } : {}), ...(line.recurrence ? { recurrence: line.recurrence } : {}) }
     const key = `${option.target_uuid}:${line.service_date}`
     try {
       if (cart.some(row => row.key === key)) throw new Error('This pooja is already in your booking for that date. Remove it first to change the details.')
-      await clientApi('bookings/quote', { method: 'POST', auth: false, body: { listing_uuid: listing.uuid, items: [item] } })
-      setCart(rows => [...rows, { key, item, name: option.name_en, date: option.item_type === 'special_pooja' ? option.occurrence.date : line.service_date, devotee: line.devotee_name, star: stars.find(row => row.code === line.star_value)?.name_en || '', quantity: line.quantity, amount: Number(option.price) * line.quantity }])
+      if (line.recurrence && cart.some(row => row.item.target_uuid === option.target_uuid && line.dates.includes(row.date))) throw new Error('One of these dates is already in your booking for this pooja.')
+      const quoted = await clientApi('bookings/quote', { method: 'POST', auth: false, body: { listing_uuid: listing.uuid, items: [item] } })
+      const date = option.item_type === 'special_pooja' ? option.occurrence.date : line.recurrence ? `${line.dates.length} dates · ${line.dates[0]} to ${line.dates.at(-1)}` : line.service_date
+      setCart(rows => [...rows, { key, item, name: option.name_en, date, devotee: line.devotee_name, star: stars.find(row => row.code === line.star_value)?.name_en || '', quantity: line.quantity, amount: Number(quoted.amount_total), delivery: line.prasadam?.method === 'home_delivery' }])
       setEditing('')
       // Remember the devotee's own star the first time they give it, so later bookings are prefilled.
       if (line.who === 'me' && line.star_value && me && !me.default_ritual_details?.star_value) {
@@ -395,7 +423,7 @@ export function Phase1Receipt() {
       <header className={styles.receiptBrand}><div><Logo/><h1 className="mt-3">Booking Receipt</h1><p className={styles.hint}>Receipt No: {receipt.number}</p><h2 className={styles.templeTitle}>{booking?.listing.name_en}</h2></div><span className={styles.status}>{booking?.status?.replaceAll('_', ' ')}</span></header>
       <div className={styles.meta}><p><b>Booking Code:</b> {receipt.snapshot.booking_code}</p><p><b>Issued:</b> {new Date(receipt.issued_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p><p><b>Name:</b> {booking?.contact_name || '—'}</p><p><b>Mobile:</b> {booking?.contact_mobile || '—'}</p></div>
       <section className={styles.receiptSection}><h2>Temple Receipt</h2><p className={styles.hint}>Booking items and amounts recorded at payment.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr><th scope="col">Item</th><th scope="col">Code</th><th scope="col">Qty</th><th scope="col">Amount</th></tr></thead><tbody>{receipt.snapshot.items?.map((row, index) => <tr key={`${row.code}:${index}`}><td>{row.name}</td><td>{row.code}</td><td>{row.quantity}</td><td>{receipt.snapshot.currency} {row.amount}</td></tr>)}</tbody></table></div><div className={styles.total}><span>Booking Amount</span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
-      {booking?.items?.length > 0 && <section className={styles.receiptSection}><h2>Current Booking Details</h2><p className={styles.hint}>Devotee and ritual details include any saved booking corrections.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr>{['Item', 'Name', 'Star', 'Booking Date', 'Delivery', 'Qty'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{booking.items.map(item => <tr key={item.uuid}><td>{item.item_name_en}</td><td>{item.devotee_name || '—'}</td><td>{item.star_value || '—'}</td><td>{item.service_date || '—'}{item.service_time ? ` ${item.service_time.slice(0, 5)}` : ''}</td><td>{PRASADAM.find(([value]) => value === item.prasadam_snapshot?.method)?.[1] || item.prasadam_snapshot?.method || '—'}</td><td>{item.quantity}</td></tr>)}</tbody></table></div></section>}
+      {booking?.items?.length > 0 && <section className={styles.receiptSection}><h2>Current Booking Details</h2><p className={styles.hint}>Devotee and ritual details include any saved booking corrections.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr>{['Item', 'Name', 'Star', 'Booking Date', 'Delivery', 'Qty'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{booking.items.map(item => <tr key={item.uuid}><td>{item.item_name_en}</td><td>{item.devotee_name || '—'}</td><td>{item.star_value || '—'}</td><td>{item.service_date || '—'}{item.service_time ? ` ${item.service_time.slice(0, 5)}` : ''}</td><td>{deliveryLabel(item.prasadam_snapshot)}</td><td>{item.quantity}</td></tr>)}</tbody></table></div></section>}
       <section className={styles.receiptSection}><h2>Payment Details</h2><div className={styles.invoiceRow}><span>Payment ID</span><b>{receipt.snapshot.provider_payment_id || '—'}</b></div><div className={styles.invoiceRow}><span>Paid on</span><span>{receipt.snapshot.paid_at ? new Date(receipt.snapshot.paid_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}</span></div><div className={styles.total}><span>Paid Amount</span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
       <p className={`${styles.hint} mt-5`}>Official payment receipt issued by TempleAddress.</p>
     </article>}
