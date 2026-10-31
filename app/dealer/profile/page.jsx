@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { DProfile } from '@/components/pages/partners'
-export default function Page(props) { return <Suspense fallback={null}><DProfile {...props}/></Suspense> }
+import { DealerProfile } from '@/components/phase1/PartnerPortal'
+export default function Page() { return <Suspense fallback={null}><DealerProfile/></Suspense> }

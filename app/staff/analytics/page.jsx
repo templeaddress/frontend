@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SAnalytics } from '@/components/pages/partners'
+import { Analytics } from '@/components/phase1/StaffAdmin'
 export const metadata = { title: 'Analytics' }
-export default function Page(props) { return <Suspense fallback={null}><SAnalytics {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><Analytics/></Suspense> }

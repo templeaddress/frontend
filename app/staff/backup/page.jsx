@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SBackup } from '@/components/pages/partners'
-export const metadata = { title: 'Backup' }
-export default function Page(props) { return <Suspense fallback={null}><SBackup {...props}/></Suspense> }
+import { Backup } from '@/components/phase1/StaffAdmin'
+export const metadata = { title: 'Backup & restore' }
+export default function Page() { return <Suspense fallback={null}><Backup/></Suspense> }

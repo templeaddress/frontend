@@ -8,8 +8,8 @@ import StaffShell from './StaffShell'
 import { staffDownload, useStaffQuery } from './StaffData'
 import { StaffDetails, StaffEmpty, StaffModal, StaffNotice, StaffPageHeading, StaffPager, StaffSearch, StaffStatus, staffDate, titleCase } from './StaffUI'
 
-const Chips = ({ label, value, options, onChange }) => <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brown-500">{label}</p><div className="flex flex-wrap gap-2">{options.map(([key, text]) => <button key={key} type="button" aria-pressed={value === key} onClick={() => onChange(key)} className={`rounded-full border px-4 py-1.5 text-sm ${value === key ? 'border-brown-900 bg-brown-900 text-white' : 'border-brown-200 bg-white text-brown-700 hover:border-saffron-400'}`}>{text}</button>)}</div></div>
-const Table = ({ head, children }) => <div className="overflow-x-auto rounded-2xl border border-brown-100 bg-white"><table className="w-full text-sm"><thead><tr>{head.map(label => <th key={label} className="th">{label}</th>)}</tr></thead><tbody>{children}</tbody></table></div>
+export const Chips = ({ label, value, options, onChange }) => <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brown-500">{label}</p><div className="flex flex-wrap gap-2">{options.map(([key, text]) => <button key={key} type="button" aria-pressed={value === key} onClick={() => onChange(key)} className={`rounded-full border px-4 py-1.5 text-sm ${value === key ? 'border-brown-900 bg-brown-900 text-white' : 'border-brown-200 bg-white text-brown-700 hover:border-saffron-400'}`}>{text}</button>)}</div></div>
+export const Table = ({ head, children }) => <div className="overflow-x-auto rounded-2xl border border-brown-100 bg-white"><table className="w-full text-sm"><thead><tr>{head.map(label => <th key={label} className="th">{label}</th>)}</tr></thead><tbody>{children}</tbody></table></div>
 
 function useFilters(initial) {
   const [query, setQuery] = useState({ page: '1', search: '', ...initial }), [search, setSearch] = useState('')
@@ -19,7 +19,7 @@ function useFilters(initial) {
 }
 
 // One review form for KYC, claims and partner requests: approve, revert (request changes) or reject with feedback.
-function Decision({ choices, onSubmit, busy, error }) {
+export function Decision({ choices, onSubmit, busy, error }) {
   const [decision, setDecision] = useState(choices[0][0])
   return <form className="mt-5 space-y-4 border-t border-brown-100 pt-5" onSubmit={event => { event.preventDefault(); onSubmit(decision, new FormData(event.currentTarget).get('note')) }}>
     <label className="block text-sm font-medium">Decision<select className="input mt-2" value={decision} onChange={e => setDecision(e.target.value)}>{choices.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>

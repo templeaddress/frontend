@@ -33,6 +33,8 @@ export function SponsorCheckout() {
     if (uuid && readAuth()?.access) clientApi('me/managed-listings').then(rows => { const row = rows.find(item => item.uuid === uuid); if (row) setListing(row) }).catch(() => null)
     if (slug) clientApi(`listings/${slug}`, { auth: false }).then(setListing).catch(() => null)
     if (query.get('kind') === 'third_party') setKind('third_party')
+    // Partner share links carry ?ref=<partner code>; prefill it so the sale is credited to that partner.
+    if (query.get('ref')) { setReferral(query.get('ref').toUpperCase()); clientApi(`referrals/${encodeURIComponent(query.get('ref'))}`, { auth: false }).then(setReferralState).catch(() => setReferralState({ valid: false })) }
   }, [queryString])
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return }

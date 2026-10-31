@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { DWallet } from '@/components/pages/partners'
-export default function Page(props) { return <Suspense fallback={null}><DWallet {...props}/></Suspense> }
+import { DealerWallet } from '@/components/phase1/PartnerPortal'
+export default function Page() { return <Suspense fallback={null}><DealerWallet/></Suspense> }

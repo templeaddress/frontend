@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SBranding } from '@/components/pages/partners'
+import { Branding } from '@/components/phase1/StaffAdmin'
 export const metadata = { title: 'Branding' }
-export default function Page(props) { return <Suspense fallback={null}><SBranding {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><Branding/></Suspense> }
