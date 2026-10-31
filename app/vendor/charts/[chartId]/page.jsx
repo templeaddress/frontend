@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { VChartDetail } from '@/components/pages/vendor'
-export default function Page(props) { return <Suspense fallback={null}><VChartDetail {...props}/></Suspense> }
+import { VendorChartDetail } from '@/components/phase1/Vendor'
+export default function Page() { return <Suspense fallback={null}><VendorChartDetail/></Suspense> }

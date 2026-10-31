@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { SEnquiries } from '@/components/pages/vendorService'
-export default function Page(props) { return <Suspense fallback={null}><SEnquiries {...props}/></Suspense> }
+import { VendorEnquiries } from '@/components/phase1/Vendor'
+export default function Page() { return <Suspense fallback={null}><VendorEnquiries/></Suspense> }
