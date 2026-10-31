@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SSupport } from '@/components/pages/partners'
-export const metadata = { title: 'Support' }
-export default function Page(props) { return <Suspense fallback={null}><SSupport {...props}/></Suspense> }
+import { StaffSupport } from '@/components/phase1/StaffModeration'
+export const metadata = { title: 'Support tickets' }
+export default function Page() { return <Suspense fallback={null}><StaffSupport/></Suspense> }
