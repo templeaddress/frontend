@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SConfig } from '@/components/pages/partners'
-export const metadata = { title: 'Config' }
-export default function Page(props) { return <Suspense fallback={null}><SConfig {...props}/></Suspense> }
+import { PlatformConfig } from '@/components/phase1/StaffAdmin'
+export const metadata = { title: 'Configuration' }
+export default function Page() { return <Suspense fallback={null}><PlatformConfig/></Suspense> }

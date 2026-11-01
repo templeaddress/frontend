@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Logo, PublicShell } from '@/components/ui'
-import { Menu, X, ChevronDown, Inbox, ListChecks, Building2, CalendarDays, Sparkles, BookOpen, Users, ReceiptText, Landmark, ShieldCheck, ClipboardList, MessageSquare, MessageCircle, History, ExternalLink, LogOut, ArrowLeftRight, Wallet } from 'lucide-react'
+import { Menu, X, ChevronDown, Inbox, BarChart3, Table2, Layers, CreditCard, Settings, Gift, Database, Palette, Bell, HandCoins, Banknote, ListChecks, Building2, CalendarDays, Sparkles, BookOpen, Users, ReceiptText, Landmark, ShieldCheck, ClipboardList, MessageSquare, MessageCircle, History, ExternalLink, LogOut, ArrowLeftRight, Wallet } from 'lucide-react'
 import { clientApi, logout, readAuth, subscribeAuth } from '@/lib/client-api'
 import { canOpenStaff, canUseStaff, rolesFor, staffLanding, staffLinks } from '@/lib/staff-access'
 import { isDemoPortal } from '@/lib/demo-portals'
@@ -54,13 +54,11 @@ export default function StaffShell({ children }) {
   const roles = rolesFor(user)
   const roleLabel = roles.includes('portal admin') ? 'Portal Admin' : roles.map(role => role[0].toUpperCase() + role.slice(1)).join(' / ')
   const navigation = [
-    ['Moderation', ['/staff', '/staff/reviews', '/staff/kyc', '/staff/charts', '/staff/special', '/staff/ownership', '/staff/support', '/staff/wallet-credit']],
-    ['Operations', ['/staff/listing', '/staff/events', '/staff/poojas', '/staff/enquiries']],
-    ['Directories', ['/staff/directory/users', '/staff/directory/transactions', '/staff/directory/bookings']],
-    ['Finance', ['/staff/payouts', '/staff/bank-verification']],
-    ['Activity', ['/staff/audit']],
+    ['Staff panel', ['/staff', '/staff/reviews', '/staff/kyc', '/staff/charts', '/staff/special', '/staff/ownership', '/staff/support', '/staff/wallet-credit', '/staff/listing', '/staff/events', '/staff/poojas', '/staff/enquiries', '/staff/directory/users', '/staff/directory/transactions', '/staff/directory/bookings']],
+    ['Accountant view', ['/staff/finance', '/staff/payouts', '/staff/withdrawals', '/staff/sponsors']],
+    ['Administrator', ['/staff/analytics', '/staff/staff-management', '/staff/tables', '/staff/masterdata', '/staff/gateway-config', '/staff/config', '/staff/plans', '/staff/backup', '/staff/branding', '/staff/notifications', '/staff/bank-verification', '/staff/audit']],
   ].map(([group, paths]) => [group, staffLinks.filter(([url, , role]) => paths.includes(url) && canUseStaff(user, role)).sort((a, b) => paths.indexOf(a[0]) - paths.indexOf(b[0]))]).filter(([, links]) => links.length)
-  const icons = { '/staff': Inbox, '/staff/kyc': ShieldCheck, '/staff/ownership': ArrowLeftRight, '/staff/support': MessageCircle, '/staff/wallet-credit': Wallet, '/staff/reviews': ListChecks, '/staff/listing': Building2, '/staff/events': CalendarDays, '/staff/special': Sparkles, '/staff/poojas': BookOpen, '/staff/charts': ClipboardList, '/staff/enquiries': MessageSquare, '/staff/directory/bookings': CalendarDays, '/staff/directory/transactions': ReceiptText, '/staff/directory/users': Users, '/staff/payouts': Landmark, '/staff/bank-verification': ShieldCheck, '/staff/audit': History }
+  const icons = { '/staff/finance': Inbox, '/staff/withdrawals': HandCoins, '/staff/sponsors': Banknote, '/staff/analytics': BarChart3, '/staff/staff-management': Users, '/staff/tables': Table2, '/staff/masterdata': Layers, '/staff/gateway-config': CreditCard, '/staff/config': Settings, '/staff/plans': Gift, '/staff/backup': Database, '/staff/branding': Palette, '/staff/notifications': Bell, '/staff': Inbox, '/staff/kyc': ShieldCheck, '/staff/ownership': ArrowLeftRight, '/staff/support': MessageCircle, '/staff/wallet-credit': Wallet, '/staff/reviews': ListChecks, '/staff/listing': Building2, '/staff/events': CalendarDays, '/staff/special': Sparkles, '/staff/poojas': BookOpen, '/staff/charts': ClipboardList, '/staff/enquiries': MessageSquare, '/staff/directory/bookings': CalendarDays, '/staff/directory/transactions': ReceiptText, '/staff/directory/users': Users, '/staff/payouts': Landmark, '/staff/bank-verification': ShieldCheck, '/staff/audit': History }
   async function signOut() {
     try { await logout() } catch (err) { setError(err.message) }
     finally { router.replace('/staff/login') }
