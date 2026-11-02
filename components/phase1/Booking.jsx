@@ -243,10 +243,13 @@ export function Phase1Checkout({ mode = 'booking' }) {
   }
 
   async function sendOtp() {
+    if (busy) return false
     setBusy(true); setError('')
     try {
-      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: `+91${localMobile(contact.mobile)}`, country_code: '+91' } })
-      if (result.password_required || result.recaptcha_required) throw new Error('Please sign in from the login page to continue.')
+      const result = await clientApi('auth/otp/request', { method: 'POST', auth: false, body: { identifier: `+91${localMobile(contact.mobile)}`, country_code: '+91', context: mode } })
+      if (result.staff_login_required || result.password_required) throw new Error('This mobile number belongs to a staff account. Sign in with your staff credentials before booking, or use a devotee mobile number.')
+      if (result.recaptcha_required) throw new Error('Checkout verification could not be completed. Please refresh and try again.')
+      if (!result.otp_sent) throw new Error('OTP could not be sent. Please try again.')
       setOtp({ challenge: result, code: result.debug_otp || '' })
       if (mode === 'booking') setResendSeconds(30)
       return true
