@@ -16,7 +16,7 @@ import LanguageControl from './LanguageControl'
 import { clientApi, readAuth, subscribeAuth } from '@/lib/client-api'
 import { rolesFor, staffLanding } from '@/lib/staff-access'
 import { useDemoPortals } from './DemoPortalGate'
-import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
+import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple } from 'lucide-react'
 
 /* ── BRAND MARK ── */
 export const TempleMark = ({ size = 36, className = '' }) => (
@@ -234,6 +234,11 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
               <span className="pill glass text-brown-50"><ShieldCheck size={12} className="text-emerald-300"/>Committee verified</span>
               <span className="pill glass text-brown-50"><Lock size={12} className="text-gold-400"/>Secure payments</span>
             </div>
+            <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/5 px-3 py-2 text-sm">
+              <Link href="/download-app" className="font-semibold hover:text-white">Get the app</Link>
+              <Link href="/download-app" aria-label="Get the Android app" className="rounded-xl bg-white p-2 text-brown-800 hover:bg-brown-100"><Smartphone size={19} aria-hidden="true" /></Link>
+              <Link href="/download-app" aria-label="Get the iOS app" className="rounded-xl bg-white p-2 text-brown-800 hover:bg-brown-100"><Apple size={19} aria-hidden="true" /></Link>
+            </div>
           </div>
           <div className="text-sm">
             <b className="text-white">For temples</b><br/>
@@ -242,6 +247,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
             <Link href="/vendor" className="hover:text-white">Temple login</Link><br/>
             <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link><br/>
             <Link href="/support" className="hover:text-white">Help & support</Link>
+            <br/><Link href="/download-app" className="hover:text-white">Downloads</Link>
           </div>
           <div className="text-sm">
             <b className="text-white">Partners</b><br/>
