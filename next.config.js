@@ -2,20 +2,23 @@ import { apiRoot } from './lib/api-url.js'
 
 const isDev = process.env.NODE_ENV !== 'production'
 
-function apiOrigin() {
-  try { return new URL(process.env.NEXT_PUBLIC_API_URL || '').origin } catch { return '' }
+function origin(value) {
+  try { return new URL(value || '').origin } catch { return '' }
 }
+const apiOrigin = () => origin(process.env.NEXT_PUBLIC_API_URL)
+// Listing and event images may be served by the Django host itself.
+const mediaOrigins = () => [...new Set([apiOrigin(), origin(process.env.TEMPLEADDRESS_API_URL)].filter(Boolean))].join(' ')
 
 // Next.js needs inline scripts for hydration; everything else that may run or frame here is listed by name.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/`,
-  "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://www.gstatic.com/_/translate_http/`,
+  "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://translate.googleapis.com https://www.gstatic.com/_/translate_http/ https://fonts.googleapis.com",
+  `img-src 'self' data: blob: https: ${mediaOrigins()}`.trim(),
+  "font-src 'self' data: https://fonts.gstatic.com",
   "media-src 'self' https:",
-  `connect-src 'self' ${apiOrigin()} https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ ${isDev ? 'ws: http://localhost:* http://127.0.0.1:*' : ''}`.trim(),
-  "frame-src https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
+  `connect-src 'self' ${apiOrigin()} https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://translate.googleapis.com https://translate-pa.googleapis.com ${isDev ? 'ws: http://localhost:* http://127.0.0.1:*' : ''}`.trim(),
+  "frame-src https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://translate.googleapis.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -57,7 +60,6 @@ const nextConfig = {
       { source: '/refund-policy', destination: '/policies/refund', permanent: true },
       { source: '/privacy-policy', destination: '/policies/privacy', permanent: true },
       { source: '/contact', destination: '/support', permanent: false },
-      { source: '/about', destination: '/', permanent: false },
     ]
   },
   async rewrites() {
