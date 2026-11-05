@@ -107,7 +107,7 @@ function BankFields({ required = true }) {
 export function PartnerProfileContent() {
   const application = useApi('me/partner-application'), me = useApi('me'), [busy, setBusy] = useState(false), [editing, setEditing] = useState(false), [changeBank, setChangeBank] = useState(false)
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), lock = useRef(false)
-  const app = normalizePartnerApplication(application.data), user = me.data, returned = app && ['rejected', 'changes_requested'].includes(app.status)
+  const app = normalizePartnerApplication(application.data), user = me.data, returned = app && ['invited', 'rejected', 'changes_requested'].includes(app.status)
   async function act(work, message, done) {
     if (lock.current) return
     lock.current = true; setBusy(true); setError(''); setNotice('')

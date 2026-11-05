@@ -8,7 +8,7 @@ const Wrap = ({ children }) => <main className="mx-auto max-w-6xl px-4 py-10">{c
 
 export function Phase1Home({ listings = [], events = [] }) {
   return <PublicShell><Wrap>
-    <section className="rounded-3xl bg-temple-grad px-6 py-14 text-white md:px-12"><p className="text-sm font-semibold uppercase tracking-wider text-gold-300">TempleAddress Phase 1</p><h1 className="mt-3 max-w-3xl text-4xl font-semibold md:text-5xl">Discover verified temples, book poojas and support approved causes.</h1><p className="mt-4 max-w-2xl text-brown-100">Server-rendered from the Django catalogue, with OTP accounts, Razorpay booking, receipts, daily charts and traceable payouts.</p>
+    <section className="rounded-3xl bg-temple-grad px-6 py-14 text-white md:px-12"><p className="text-sm font-semibold uppercase tracking-wider text-gold-300">TempleAddress</p><h1 className="mt-3 max-w-3xl text-4xl font-semibold md:text-5xl">Discover verified temples, book poojas and support approved causes.</h1><p className="mt-4 max-w-2xl text-brown-100">Find temples and festivals, book poojas and donate online, with instant receipts and zero platform fee.</p>
       <HomeListingSearch/>
       <div className="mt-6 flex flex-wrap gap-3"><Link className="btn bg-white text-brown-900" href="/temples">Browse temples</Link><Link className="btn border border-white/30 text-white" href="/services">Find services</Link></div>
     </section>
@@ -19,7 +19,7 @@ export function Phase1Home({ listings = [], events = [] }) {
 
 export function ListingDirectory({ title = 'TempleAddress listings', ...directory }) {
   return <PublicShell><Wrap>
-    <div className="mb-8"><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Verified directory</p><h1 className="mt-2 text-4xl font-semibold">{title}</h1><p className="mt-2 text-brown-500">Published Phase 1 profiles from the Django catalogue. Sensitive contacts are never included in this page data.</p></div>
+    <div className="mb-8"><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Verified directory</p><h1 className="mt-2 text-4xl font-semibold">{title}</h1><p className="mt-2 text-brown-500">Profiles verified by the TempleAddress team.</p></div>
     <ListingDirectoryClient key={JSON.stringify([directory.type, directory.initialFilters, directory.initialPageNumber])} {...directory}/>
   </Wrap></PublicShell>
 }
