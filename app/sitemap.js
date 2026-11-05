@@ -4,7 +4,7 @@ import { apiCollection, listingPath } from '@/lib/catalogue'
 export const dynamic = 'force-dynamic'
 
 const BASE = 'https://templeaddress.com'
-const STATIC_PATHS = ['/', '/temples', '/special', '/festival', '/services', '/sponsor', '/submit-temple', '/download-app', '/support',
+const STATIC_PATHS = ['/', '/temples', '/special', '/festival', '/services', '/sponsor', '/submit-temple', '/download-app', '/support', '/about', '/help',
   ...['terms', 'privacy', 'data', 'cancellation', 'refund', 'cookie'].map(kind => `/policies/${kind}`)]
 
 export default async function sitemap() {

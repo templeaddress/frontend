@@ -17,7 +17,9 @@ import { clientApi, readAuth, subscribeAuth } from '@/lib/client-api'
 import { rolesFor, staffLanding } from '@/lib/staff-access'
 import { vendorLanding } from '@/lib/vendor'
 import { useDemoPortals } from './DemoPortalGate'
-import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple } from 'lucide-react'
+import SiteFooter from '@/components/SiteFooter'
+import { whatsappLink } from '@/lib/site'
+import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple, Award } from 'lucide-react'
 
 /* ── BRAND MARK ── */
 export const TempleMark = ({ size = 36, className = '' }) => (
@@ -54,7 +56,7 @@ export const GoogleIcon = ({ size = 18, className = '' }) => (
 
 export const TrustBadges = ({ className = '' }) => (
   <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-    {[[Zap,'Razorpay'],[ArrowLeftRight,'UPI'],[Globe2,'Digital India'],[Rocket,'Startup India'],[Sparkles,'Kerala Startup Mission']].map(([I, l]) =>
+    {[[Zap,'Razorpay'],[ArrowLeftRight,'UPI'],[Globe2,'Digital India'],[Rocket,'Startup India'],[Award,'MSME'],[Sparkles,'Kerala Startup Mission']].map(([I, l]) =>
       <span key={l} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-brown-100"><I size={13} className="text-gold-400"/>{l}</span>)}
   </div>
 )
@@ -210,7 +212,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
             ? <Link href="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link>
             : <Logo light={!lightHeader} />}
           {!tenant && (
-            <nav className="ml-4 hidden gap-1 md:flex">
+            <nav className="ml-4 hidden gap-1 whitespace-nowrap md:flex">
               {pubNav.map(([href, label]) => (
                 <ActiveLink key={href} href={href} end={href === '/'} className={({ isActive }) =>
                   `rounded-lg px-3 py-1.5 text-sm font-medium ${lightHeader
@@ -241,59 +243,8 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
 
       <main className="min-h-[70vh]">{children}</main>
 
-      <footer className="mt-16 bg-brown-900 text-brown-100">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-4">
-          <div>
-            <Logo light />
-            <p className="mt-2 text-sm text-brown-200">A digital address for every temple. Zero platform fee on vazhipadu and donations.</p>
-            <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-              <span className="pill glass text-brown-50"><ShieldCheck size={12} className="text-emerald-300"/>Committee verified</span>
-              <span className="pill glass text-brown-50"><Lock size={12} className="text-gold-400"/>Secure payments</span>
-            </div>
-            <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/5 px-3 py-2 text-sm">
-              <Link href="/download-app" className="font-semibold hover:text-white">Get the app</Link>
-              <Link href="/download-app" aria-label="Get the Android app" className="rounded-xl bg-white p-2 text-brown-800 hover:bg-brown-100"><Smartphone size={19} aria-hidden="true" /></Link>
-              <Link href="/download-app" aria-label="Get the iOS app" className="rounded-xl bg-white p-2 text-brown-800 hover:bg-brown-100"><Apple size={19} aria-hidden="true" /></Link>
-            </div>
-          </div>
-          <div className="text-sm">
-            <b className="text-white">For temples</b><br/>
-            <Link href="/submit-temple" className="hover:text-white">Submit a temple</Link><br/>
-            <Link href="/login?next=/account/listings/new&intent=create-profile" className="hover:text-white">Create a profile</Link><br/>
-            <Link href="/vendor" className="hover:text-white">Temple login</Link><br/>
-            <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link><br/>
-            <Link href="/support" className="hover:text-white">Help & support</Link>
-            <br/><Link href="/download-app" className="hover:text-white">Downloads</Link>
-          </div>
-          <div className="text-sm">
-            <b className="text-white">Partners</b><br/>
-            {demoPortals && <><Link href="/partner" className="hover:text-white">Become a partner</Link><br/>
-            <Link href="/dealer" className="hover:text-white">Dealer portal</Link><br/></>}
-            <Link href="/staff" className="hover:text-white">Staff panel</Link>
-          </div>
-          <div className="text-sm">
-            <b className="text-white">Devotee support</b><br/>
-            <Link href="/whatsapp" className="hover:text-white">WhatsApp +91 9495 041196</Link><br/>
-            help@templeaddress.com<br/>
-            English · മലയാളം
-          </div>
-        </div>
-        <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-xs text-brown-200">Payments by <b className="text-brown-100">Razorpay</b> — TempleAddress never stores card details.</span>
-              <TrustBadges />
-            </div>
-            <div className="flex flex-col gap-1 text-xs text-brown-300 sm:flex-row sm:items-center sm:justify-between">
-              <nav aria-label="Policies" className="flex flex-wrap gap-3">
-                {[['terms','Terms'],['privacy','Privacy'],['data','Data'],['cancellation','Cancellation'],['refund','Refunds']].map(([path, label]) =>
-                  <Link key={path} href={`/policies/${path}`} className="underline hover:text-white">{label}</Link>)}
-              </nav>
-              <span>© 2026 TempleAddress</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter/>
+      {!hideChatbot && !booking && <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" aria-label="Chat with TempleAddress on WhatsApp" className="fixed bottom-5 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-soft transition hover:scale-105 md:left-6"><MessageCircle size={24} aria-hidden="true"/></a>}
       {!hideChatbot && <Chatbot />}
     </div>
   )

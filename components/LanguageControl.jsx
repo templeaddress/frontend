@@ -18,7 +18,7 @@ export default function LanguageControl() {
   }
   return (
     <details className="relative text-sm">
-      <summary className="cursor-pointer rounded-lg bg-white/10 px-2 py-2">🌐 Language</summary>
+      <summary className="cursor-pointer list-none whitespace-nowrap rounded-lg bg-white/10 px-2.5 py-2 [&::-webkit-details-marker]:hidden" aria-label="Language">🌐<span className="hidden sm:inline"> Language</span></summary>
       <div className="absolute right-0 z-50 mt-2 w-64 rounded-xl bg-white p-4 text-brown-900 shadow-xl">
         <p className="mb-2">English · മലയാളം · हिन्दी · தமிழ் · తెలుగు · ಕನ್ನಡ</p>
         <p className="mb-3 text-xs">Optional Google machine translation. Verify important details in English.</p>
