@@ -5,10 +5,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Wallet, UserRound, ListChecks, Share2, PlusCircle, ShieldCheck, Map, Users, LogOut, Download, Copy, Power } from 'lucide-react'
+import { Wallet, UserRound, ListChecks, Share2, PlusCircle, ShieldCheck, Map, Users, LogOut, Power } from 'lucide-react'
 import { Logo } from '@/components/ui'
 import { clientApi, logout, readAuth, requireAuth } from '@/lib/client-api'
-import { ListingQrPreview } from '@/components/ListingQr'
+import { PartnerWalletContent, PartnerProfileContent, PartnerShareContent, PartnerListingsContent, PartnerSubmitContent } from './PartnerFeatures'
 import { StaffDetails, StaffEmpty, StaffModal, StaffNotice, StaffStatus, money, staffDate, titleCase } from './StaffUI'
 
 const NAV = {
@@ -30,7 +30,7 @@ function Shell({ kind, children }) {
   useEffect(() => { if (requireAuth(router, pathname)) setReady(true) }, [router, pathname])
   if (!ready) return null
   return <div className="min-h-screen bg-brown-50"><header className="sticky top-0 z-40 border-b border-saffron-500/60 bg-brown-900 text-white"><div className="mx-auto flex h-16 max-w-[1500px] items-center gap-3 px-4"><Logo light markSize={30}/><span className="rounded-full bg-gold-300/15 px-3 py-1 text-xs font-semibold text-gold-300">{kind === 'partner' ? 'Partner' : 'Dealer'}</span><div className="flex-1"/><span className="hidden text-sm md:block">{readAuth()?.user?.name}</span><button className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold" onClick={async () => { try { await logout() } finally { router.replace('/login') } }}><LogOut size={15}/>Logout</button></div></header>
-    <div className="mx-auto grid max-w-[1500px] md:grid-cols-[230px_minmax(0,1fr)]"><aside className="border-r border-brown-100 bg-white p-3 md:sticky md:top-16 md:h-[calc(100vh-64px)]"><p className="px-3 pb-2 pt-3 text-[11px] font-bold uppercase tracking-wider text-brown-500">{kind}</p><nav className="flex gap-1 overflow-x-auto md:block md:space-y-1">{NAV[kind].map(([href, label, Icon]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined} className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${pathname === href ? 'bg-saffron-50 text-saffron-700' : 'text-brown-700 hover:bg-brown-50'}`}><Icon size={17}/>{label}</Link>)}</nav></aside><main className="min-w-0 p-4 sm:p-6 xl:p-8">{children}</main></div></div>
+    <div className={`mx-auto grid max-w-[1500px] ${kind === 'partner' ? 'grid-cols-1' : ''} md:grid-cols-[230px_minmax(0,1fr)]`}><aside className="border-r border-brown-100 bg-white p-3 md:sticky md:top-16 md:h-[calc(100vh-64px)]"><p className="px-3 pb-2 pt-3 text-[11px] font-bold uppercase tracking-wider text-brown-500">{kind}</p><nav className="flex gap-1 overflow-x-auto md:block md:space-y-1">{NAV[kind].map(([href, label, Icon]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined} className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${pathname === href ? 'bg-saffron-50 text-saffron-700' : 'text-brown-700 hover:bg-brown-50'}`}><Icon size={17}/>{label}</Link>)}</nav></aside><main className="min-w-0 p-4 sm:p-6 xl:p-8">{children}</main></div></div>
 }
 
 function NotApproved({ kind, error }) {
@@ -48,47 +48,27 @@ function WalletPanel({ balances, transactions, onChange }) {
 }
 
 export function PartnerWallet() {
-  const { data, error, loading, reload } = useApi('me/partner')
-  return <Shell kind="partner">{loading ? <p role="status">Loading…</p> : !data ? <NotApproved kind="partner" error={error}/> : <><Heading title="Wallet" text={`Partner ID ${data.partner.code}${data.dealer ? ` · Dealer ${data.dealer.code} (${data.dealer.name})` : ''}`} action={<div className="flex gap-2"><Link className="btn-g" href="/partner/profile">Partner profile</Link></div>}/><WalletPanel balances={data.balances} transactions={data.transactions} onChange={reload}/></>}</Shell>
+  return <Shell kind="partner"><PartnerWalletContent/></Shell>
 }
 
 export function PartnerListings() {
-  const { data, error, loading } = useApi('me/partner')
-  return <Shell kind="partner"><Heading title="My listings" text="Listings you submitted or referred. Edits go to staff for approval." action={<Link className="btn-p" href="/account/listings/new">Add temple</Link>}/>{loading ? <p role="status">Loading…</p> : !data ? <NotApproved kind="partner" error={error}/> :
-    <div className="space-y-3">{data.listings.map(row => <article key={row.uuid} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brown-100 bg-white p-5"><div><h2 className="text-lg font-semibold">{row.name_en} <StaffStatus value={row.status}/></h2><p className="text-sm text-brown-500">{row.code} · {row.district} · {titleCase(row.relation)} · Earned {money(row.earned)}</p></div><div className="flex gap-2">{row.status === 'published' && <Link className="btn-g" href={`/t/${row.slug}`}>Detailed view</Link>}<Link className="btn-g" href={`/account/listings/${row.uuid}/manage`}>Edit listing</Link></div></article>)}{!data.listings.length && <p className="text-sm text-brown-500">No listings yet.</p>}</div>}</Shell>
+  return <Shell kind="partner"><PartnerListingsContent/></Shell>
 }
 
 export function PartnerSubmissions() {
-  const { data, error, loading } = useApi('me/listings')
-  return <Shell kind="partner"><Heading title="My submissions" text="Staff feedback appears here; correct returned submissions from the editor."/><StaffNotice error={error}/>
-    <Table head={['Listing ID', 'Listing', 'Type', 'Status', 'Feedback', '']}>{(data || []).map(row => <tr key={row.uuid}><td className="td">{row.publication_status === 'published' ? row.code : 'Pending'}</td><td className="td font-semibold">{row.name_en}</td><td className="td">{titleCase(row.listing_type)}</td><td className="td"><StaffStatus value={row.revision_status || row.publication_status}/></td><td className="td text-xs">{row.review_notes || '—'}</td><td className="td"><Link className="btn-g !px-2.5 !py-1 text-xs" href={`/account/listings/${row.uuid}/manage`}>Open</Link></td></tr>)}{(loading || !data?.length) && <StaffEmpty columns={6} loading={loading} text="No submissions yet."/>}</Table></Shell>
+  return <Shell kind="partner"><PartnerListingsContent submissions/></Shell>
 }
 
 export function PartnerSubmit() {
-  return <Shell kind="partner"><Heading title="Create a new listing" text="Temple · Festival · Service professional. Listings you create are attributed to your Partner ID after staff verification."/><div className="max-w-xl rounded-2xl border border-brown-100 bg-white p-6"><p className="text-sm text-brown-600">The listing editor walks through basics, location, details, gallery, contact and KYC, then sends it for staff review.</p><Link className="btn-p mt-4" href="/account/listings/new">Start a listing</Link></div></Shell>
+  return <Shell kind="partner"><PartnerSubmitContent/></Shell>
 }
 
 export function PartnerShare() {
-  const { data, error, loading } = useApi('me/partner'), [selected, setSelected] = useState(''), [copied, setCopied] = useState(false)
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const listing = data?.listings.find(row => row.uuid === selected) || data?.listings.find(row => row.status === 'published')
-  const link = data && (listing ? `${origin}/t/${listing.slug}?ref=${data.partner.code}` : `${origin}/sponsor${data.referral_link}`)
-  const message = listing ? `🙏 ${listing.name_en} is now online. Book poojas and get your receipt on WhatsApp.\n${link}` : `Support a temple on TempleAddress.\n${link}`
-  return <Shell kind="partner"><Heading title="Share & promote" text={data ? `Every link carries your code ${data.partner.code}` : ''}/>{loading ? <p role="status">Loading…</p> : !data ? <NotApproved kind="partner" error={error}/> : <div className="grid gap-5 lg:grid-cols-2">
-    <section className="rounded-2xl border border-brown-100 bg-white p-5"><label className="block text-sm font-medium">What to share<select className="input mt-1" value={listing?.uuid || ''} onChange={event => setSelected(event.target.value)}><option value="">Sponsorship page</option>{data.listings.filter(row => row.status === 'published').map(row => <option key={row.uuid} value={row.uuid}>{row.name_en}</option>)}</select></label><div className="mt-3 flex gap-2"><code className="input flex-1 truncate">{link}</code><button className="btn-g" onClick={() => { navigator.clipboard?.writeText(link); setCopied(true) }}><Copy size={15}/>{copied ? 'Copied' : 'Copy'}</button></div><div className="mt-3 flex flex-wrap gap-2"><a className="btn-wa" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">WhatsApp</a><a className="btn-g" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`} target="_blank" rel="noreferrer">Facebook</a><a className="btn-g" href={`https://x.com/intent/post?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">X</a></div><label className="mt-4 block text-sm font-medium">Pre-filled message<textarea className="input mt-1" rows={4} readOnly value={message}/></label></section>
-    <section className="rounded-2xl border border-brown-100 bg-white p-5 text-center"><h2 className="font-semibold">QR for posters</h2><div className="mt-3 flex justify-center">{link && <ListingQrPreview value={link} size={200}/>}</div><p className="mt-2 text-xs text-brown-500">QR · {data.partner.code}</p></section></div>}</Shell>
+  return <Shell kind="partner"><PartnerShareContent/></Shell>
 }
 
 export function PartnerProfile() {
-  const application = useApi('me/partner-application'), bank = useApi('me/bank-account'), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
-  async function act(work, message) { setBusy(true); setError(''); setNotice(''); try { await work(); setNotice(message); application.reload(); bank.reload() } catch (err) { setError(err.message) } finally { setBusy(false) } }
-  const app = application.data, canApply = !app || ['rejected', 'changes_requested'].includes(app.status)
-  return <Shell kind="partner"><Heading title="Profile & KYC" text="Partner identity, assigned dealer, documents and settlement account." action={app?.status === 'active' && <button className="btn-g" onClick={() => window.print()}><Download size={15}/>Download Partner ID</button>}/><StaffNotice error={error}/><StaffNotice>{notice}</StaffNotice>
-    {app && <section className="mb-5 rounded-2xl border border-brown-100 bg-white p-5"><StaffDetails values={[['Partner ID', app.code], ['Status', <StaffStatus key="s" value={app.status}/>], ['Dealer', app.dealer_code || '—'], ['KYC', titleCase(app.kyc_status)], ['Staff remarks', app.review_note], ['Settlement account', app.bank ? `${app.bank.bank_name} ••••${app.bank.account_last_four} · ${titleCase(app.bank.status)}` : '—']]}/><h3 className="mt-4 text-sm font-semibold">Documents</h3><ul className="mt-1 text-sm">{app.documents.map(doc => <li key={doc.uuid}>{titleCase(doc.kind)} · {titleCase(doc.status)}</li>)}{!app.documents.length && <li className="text-brown-500">None uploaded.</li>}</ul></section>}
-    {canApply && <form className="mb-5 grid max-w-2xl gap-3 rounded-2xl border border-brown-100 bg-white p-5 sm:grid-cols-2" onSubmit={event => { event.preventDefault(); const form = Object.fromEntries(new FormData(event.currentTarget)); act(() => clientApi('me/partner-application', { method: 'POST', body: { dealer_code: form.dealer_code, referral_source: form.referral_source, address: form.address, pan: form.pan, bank: { beneficiary_name: form.beneficiary_name, account_number: form.account_number, ifsc: form.ifsc, bank_name: form.bank_name } } }), 'Application submitted for staff review.') }}><h2 className="text-lg font-semibold sm:col-span-2">{app ? 'Resubmit application' : 'Apply as a partner'}</h2><input name="dealer_code" className="input" placeholder="Dealer code (optional)"/><input name="referral_source" className="input" placeholder="How did you hear about us?"/><textarea name="address" className="input sm:col-span-2" rows={2} placeholder="Address" required/><input name="pan" className="input" placeholder="PAN" required pattern="[A-Za-z]{5}[0-9]{4}[A-Za-z]"/><span/><input name="beneficiary_name" className="input" placeholder="Account holder name" required/><input name="account_number" className="input" placeholder="Account number" required pattern="[0-9]{6,34}"/><input name="ifsc" className="input" placeholder="IFSC" required/><input name="bank_name" className="input" placeholder="Bank name" required/><button className="btn-p sm:w-fit" disabled={busy}>Submit application</button></form>}
-    {app && <form className="mb-5 flex max-w-2xl flex-wrap items-end gap-3 rounded-2xl border border-brown-100 bg-white p-5" onSubmit={event => { event.preventDefault(); act(() => clientApi('me/documents', { method: 'POST', body: new FormData(event.currentTarget) }), 'Document uploaded.') }}><label className="text-sm font-medium">Document<select name="kind" className="input mt-1"><option value="id_proof">ID proof</option><option value="address_proof">Address proof</option><option value="pan">PAN card</option><option value="bank_proof">Bank proof</option></select></label><input name="file" type="file" accept="application/pdf,image/jpeg,image/png" className="input max-w-xs" required/><button className="btn-g" disabled={busy}>Upload</button></form>}
-    {app?.status === 'active' && bank.data && <section className="max-w-2xl rounded-2xl border border-brown-100 bg-white p-5"><h2 className="font-semibold">Settlement account</h2><p className="text-sm">{bank.data.beneficiary_name} · {bank.data.bank_name} ••••{bank.data.account_last_four} · {bank.data.ifsc} · <StaffStatus value={bank.data.status}/></p></section>}
-  </Shell>
+  return <Shell kind="partner"><PartnerProfileContent/></Shell>
 }
 
 // ----- dealer -----

@@ -9,6 +9,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Check, Search, Upload } from 'lucide-react'
 import { Field, Input, PublicShell } from '@/components/ui'
 import { clientApi, isVerifiedUser, readAuth, requireAuth } from '@/lib/client-api'
+import { sponsorReturnPath } from '@/lib/partner'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const METHODS = { razorpay: 'Pay online (UPI, card, net banking)', bank_transfer: 'Bank transfer (NEFT / IMPS)', cheque: 'Cheque', upi_qr: 'UPI QR (offline confirmation)' }
@@ -47,7 +48,7 @@ export function SponsorCheckout() {
   async function checkReferral() { if (!referral.trim()) return setReferralState(null); try { setReferralState(await clientApi(`referrals/${encodeURIComponent(referral.trim())}`, { auth: false })) } catch { setReferralState({ valid: false }) } }
   async function pay(event) {
     event.preventDefault(); setError('')
-    if (!requireAuth(router, `/sponsor${listing ? `?listing=${listing.uuid}` : ''}`)) return
+    if (!requireAuth(router, sponsorReturnPath(queryString, listing, referral, kind))) return
     if (!isVerifiedUser(readAuth()?.user)) return setError('Sign in with mobile OTP or Google to continue.')
     if (!listing) return setError('Choose the temple to sponsor.')
     if (!chosen.length) return setError(kind === 'self' ? 'Choose a plan.' : 'Choose a sponsor package.')
