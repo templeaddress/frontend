@@ -15,6 +15,7 @@ import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
 import { clientApi, readAuth, subscribeAuth } from '@/lib/client-api'
 import { rolesFor, staffLanding } from '@/lib/staff-access'
+import { vendorLanding } from '@/lib/vendor'
 import { useDemoPortals } from './DemoPortalGate'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple } from 'lucide-react'
 
@@ -178,12 +179,27 @@ const pubNav = [['/', 'Home'], ['/temples', 'Temples'], ['/special', 'Special po
 export function PublicShell({ children, tenant, hideChatbot = false, booking = false }) {
   const demoPortals = useDemoPortals()
   const [open, setOpen] = useState(false)
-  const accountPath = useSyncExternalStore(subscribeAuth, () => {
+  const pathname = usePathname()
+  const access = useSyncExternalStore(subscribeAuth, () => readAuth()?.access || '', () => '')
+  const [vendorAccount, setVendorAccount] = useState({ access: '', path: null })
+  const defaultAccountPath = useSyncExternalStore(subscribeAuth, () => {
     const session = readAuth()
     if (!session?.access) return '/login'
     if (rolesFor(session.user).length) return staffLanding(session.user)
     return session.user?.is_staff ? '/staff' : '/account'
   }, () => '/login')
+  useEffect(() => {
+    if (!access || defaultAccountPath !== '/account') return
+    let active = true
+    clientApi('me/managed-listings').then(rows => {
+      let saved = null
+      try { saved = window.localStorage.getItem('ta-vendor-listing') } catch {}
+      if (active) setVendorAccount({ access, path: vendorLanding(rows, saved) })
+    }).catch(() => { if (active) setVendorAccount({ access, path: null }) })
+    return () => { active = false }
+  }, [access, defaultAccountPath, pathname])
+  const vendorPath = defaultAccountPath === '/account' && vendorAccount.access === access ? vendorAccount.path : null
+  const accountPath = vendorPath || defaultAccountPath
   const signedIn = accountPath !== '/login'
   const lightHeader = tenant || booking
   return (
@@ -209,7 +225,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           <LanguageControl />
           {!booking && <Link href="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
           <Link href={accountPath} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            {signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}
+            {signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : vendorPath ? 'Vendor Panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}
           </Link>
           <button className={`md:hidden ${lightHeader ? 'text-brown-800' : ''}`} onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}
