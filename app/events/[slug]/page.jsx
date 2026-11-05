@@ -2,6 +2,15 @@ import { notFound } from 'next/navigation'
 
 import EventRegistration from '@/components/phase1/EventRegistration'
 import { apiFetch } from '@/lib/api'
+import { staticParams } from '@/lib/catalogue'
+
+// Pre-rendered at build and refreshed every five minutes; new events render on first visit.
+export const revalidate = 300
+export const dynamicParams = true
+
+export function generateStaticParams() {
+  return staticParams('events', row => ({ slug: row.slug }))
+}
 
 async function load(slug) {
   try { return await apiFetch(`events/${encodeURIComponent(slug)}`) }

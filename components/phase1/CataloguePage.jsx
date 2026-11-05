@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { catalogueReference, listingPath } from '@/lib/catalogue'
+import { listingSharing } from '@/lib/seo'
 import ListingDetailClient from './ListingDetailClient'
 import EventRegistration from './EventRegistration'
 
@@ -10,8 +11,9 @@ export async function loadCatalogue(kind, reference, type) {
 
 export async function catalogueMetadata(kind, reference, type) {
   const row = await loadCatalogue(kind, reference, type)
-  return { title: row.seo_title || row.name_en, description: row.seo_description || row.short_description_en || row.description_en,
-    alternates: { canonical: kind === 'events' ? `/events/${row.slug}` : listingPath(row) } }
+  const description = row.seo_description || row.short_description_en || row.description_en || `${row.name_en} on TempleAddress.`
+  return { title: row.seo_title || row.name_en, description,
+    alternates: { canonical: kind === 'events' ? `/events/${row.slug}` : listingPath(row) }, ...listingSharing(row, row.name_en, description) }
 }
 
 export async function CataloguePage({ kind = 'listings', reference, type }) {

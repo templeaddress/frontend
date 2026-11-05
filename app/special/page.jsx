@@ -6,7 +6,7 @@ import SpecialPoojaDirectory from '@/components/phase1/SpecialPoojaDirectory'
 // Render on request; lib/api retains its 300-second fetch cache.
 export const revalidate = 0
 
-export const metadata = { title: 'Special Poojas', alternates: { canonical: '/special' } }
+export const metadata = { title: 'Special Poojas', description: 'Book special poojas and seasonal temple offerings from verified temples.', alternates: { canonical: '/special' } }
 export default async function Page({ searchParams }) {
   const initialPageNumber = directoryPageNumber(await searchParams)
   const initialPage = await apiFetch(`events?kind=special_pooja&page_size=${DIRECTORY_PAGE_SIZE}&page=${initialPageNumber}`)
