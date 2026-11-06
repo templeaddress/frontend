@@ -18,6 +18,7 @@ import { rolesFor, staffLanding } from '@/lib/staff-access'
 import { vendorLanding } from '@/lib/vendor'
 import { useDemoPortals } from './DemoPortalGate'
 import SiteFooter from '@/components/SiteFooter'
+import ReferralSignInLink from '@/components/ReferralSignInLink'
 import { whatsappLink } from '@/lib/site'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple, Award } from 'lucide-react'
 
@@ -203,6 +204,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
   const vendorPath = defaultAccountPath === '/account' && vendorAccount.access === access ? vendorAccount.path : null
   const accountPath = vendorPath || defaultAccountPath
   const signedIn = accountPath !== '/login'
+  const AccountLink = signedIn ? Link : ReferralSignInLink
   const lightHeader = tenant || booking
   return (
     <div className={`${tenant ? 'tenant' : ''} ${booking ? 'booking-shell' : ''}`}>
@@ -226,9 +228,9 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           <div className="flex-1" />
           <LanguageControl />
           {!booking && <Link href="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
-          <Link href={accountPath} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+          <AccountLink href={accountPath} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
             {signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : vendorPath ? 'Vendor Panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}
-          </Link>
+          </AccountLink>
           <button className={`md:hidden ${lightHeader ? 'text-brown-800' : ''}`} onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}
           </button>

@@ -48,3 +48,8 @@ Sponsorship login now preserves the selected listing, referral code and purchase
 - Django system checks passed and `makemigrations --check --dry-run` reported no changes.
 - Headless Chrome passed fixture-based interactions across all six routes, with every route constrained to a 390px mobile viewport. Wallet, profile and sharing screenshots were visually inspected.
 - Authenticated integration against a running Django/PostgreSQL deployment, private document storage and real providers remains an acceptance step.
+
+
+## Signup referral sharing
+
+`/partner/share` also offers New user signup. Its registration URL carries the partner code and, when selected, the exact public listing as the return destination. Eligible verified new accounts may credit a separate, configured affiliate signup-points rule. Existing accounts and account linking do not award signup points. Selecting/copying/sharing a URL alone creates no reward or commission. Staff configure the amount under `/staff/config` > Commissions and bonuses; no amount is seeded by deployment.

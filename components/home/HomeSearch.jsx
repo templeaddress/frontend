@@ -16,7 +16,7 @@ export default function HomeSearch() {
   const router = useRouter()
   const search = value => router.push(directoryHref(type, { ...EMPTY_FILTERS, query: value.trim(), searchScope: value.trim() ? 'listing_only' : '' }))
   const placeholder = { temple: 'Temple name, deity, place or code', festival: 'Festival name, place or code', service: 'Priest, astrologer, artist or place' }[type]
-  return <div className="mt-8 max-w-2xl">
+  return <div className="relative z-20 mt-8 max-w-2xl">
     <div role="tablist" aria-label="Search in" className="mb-3 flex flex-wrap gap-2">
       {CATEGORIES.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={type === key} onClick={() => setType(key)}
         className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${type === key ? 'bg-white text-brown-900' : 'bg-white/10 text-white hover:bg-white/20'}`}>{label}</button>)}
