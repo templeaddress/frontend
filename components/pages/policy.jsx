@@ -46,7 +46,7 @@ export function Policy() {
   const title = policies[kind] || 'Policy not found'
   return <PublicShell hideChatbot><div className="mx-auto max-w-3xl px-4 py-10">
     <h1 className="text-3xl font-semibold">{title}</h1>
-    <div className="card mt-6 space-y-4 p-6">{(copy[kind] || []).map(paragraph => <p key={paragraph}>{paragraph}</p>)}<p>Questions and formal requests may be sent to <a className="text-saffron-700 underline" href="mailto:help@templeaddress.com">help@templeaddress.com</a>.</p></div>
+    <div className="card mt-6 space-y-4 p-6">{(copy[kind] || []).map(paragraph => <p key={paragraph}>{paragraph}</p>)}<p>Questions and formal requests may be sent to <a className="text-saffron-700 underline" href="mailto:info@templeaddress.com">info@templeaddress.com</a>.</p></div>
     <Link className="btn-g mt-4" href="/">Back to home</Link>
   </div></PublicShell>
 }

@@ -32,7 +32,7 @@ export default function AboutPage() {
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">{VALUES.map(([Icon, title, text]) => <li key={title} className="card p-5"><Icon className="text-saffron-600" size={26} aria-hidden="true"/><h3 className="mt-3 font-semibold">{title}</h3><p className="mt-1 text-sm text-brown-500">{text}</p></li>)}</ul>
       <section className="mt-10 rounded-2xl border border-brown-100 bg-white p-6">
         <h2 className="text-xl font-semibold">Who we are</h2>
-        <p className="mt-2 text-sm text-brown-700">TempleAddress is built and operated by {SITE.legalName}, Kerala, India. Write to us at <a className="text-saffron-700 underline" href={`mailto:${SITE.infoEmail}`}>{SITE.infoEmail}</a> or reach devotee support from the <Link href="/support" className="text-saffron-700 underline">help & support</Link> page.</p>
+        <p className="mt-2 text-sm text-brown-700">TempleAddress is built and operated by {SITE.legalName}, Kerala, India. Write to us at <a className="text-saffron-700 underline" href={`mailto:${SITE.email}`}>{SITE.email}</a> or reach devotee support from the <Link href="/support" className="text-saffron-700 underline">help & support</Link> page.</p>
       </section>
     </main>
   </PublicShell>
