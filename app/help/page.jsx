@@ -32,7 +32,7 @@ export default function HelpPage() {
     <main className="mx-auto max-w-4xl px-4 py-12">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-600">Help</p>
       <h1 className="mt-2 text-4xl font-semibold">User guide</h1>
-      <p className="mt-3 text-brown-600">Everything you need to use TempleAddress. Still stuck? <Link href="/support" className="text-saffron-700 underline">Raise a support request</Link> or write to <a className="text-saffron-700 underline" href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>.</p>
+      <p className="mt-3 text-brown-600">Everything you need to use TempleAddress. Still stuck? <Link href="/support" className="text-saffron-700 underline">Raise a support request</Link> or write to <a className="text-saffron-700 underline" href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
       {GUIDE.map(([section, items]) => <section key={section} className="mt-10">
         <h2 className="text-2xl font-semibold">{section}</h2>
         <div className="mt-4 space-y-3">{items.map(([title, body]) => <details key={title} className="card group p-5 [&_a]:text-saffron-700 [&_a]:underline">
