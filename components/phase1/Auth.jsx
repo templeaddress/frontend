@@ -8,6 +8,7 @@ import { canLinkMobile, clientApi, readAuth, safeNextPath, saveAuth } from '@/li
 import OtpInput from './OtpInput'
 import styles from './Template.module.css'
 import { cleanMobile, mobileError, mobileLimits, validMobile } from '@/lib/auth-phone'
+import { signupReferralCode } from '@/lib/referral'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -48,6 +49,8 @@ export default function Phase1Login({ initialMode = 'login' }) {
   const [recaptchaRequired, setRecaptchaRequired] = useState(null)
   const [recaptchaToken, setRecaptchaToken] = useState('')
   const destination = safeNextPath(params.get('next') || params.get('redirect'), '/account')
+  const referralCode = signupReferralCode(params.toString())
+  const switchQuery = new URLSearchParams({ ...(destination !== '/account' ? { next: destination } : {}), ...(referralCode ? { ref: referralCode } : {}) }).toString()
   const linkRequested = params.get('link') === 'mobile'
   const linkingMobile = step === 'google_mobile' || step === 'google_mobile_otp'
   const verifyingOtp = step === 'otp' || step === 'google_mobile_otp'
@@ -126,7 +129,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
         callback: async ({ credential }) => {
           setBusy(true); setError('')
           try {
-            const result = await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', credential } })
+            const result = await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', credential, ...(referralCode ? { referral_code: referralCode } : {}) } })
             if (result.profile_completion_required) {
               setGoogleSignup(result); setName(result.google_profile?.name || ''); setEmail(result.google_profile?.email || ''); setIdentifier(''); setStep('google_profile')
             } else finish(result)
@@ -143,7 +146,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
       document.head.appendChild(script)
       return () => script.remove()
     }
-  }, [finish, step, mode])
+  }, [finish, step, mode, referralCode])
 
   async function requestOtp({ staffPassword = '', channel = '' } = {}) {
     if (busy) return
@@ -156,7 +159,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
       const normalized = activeIdentifier || mobileIdentifier(countryCode, identifier)
       const result = await clientApi('auth/otp/request', {
         method: 'POST', auth: false,
-        body: { identifier: normalized, country_code: countryCode, password: staffPassword || undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken, ...(channel ? { channel } : {}) },
+        body: { identifier: normalized, country_code: countryCode, password: staffPassword || undefined, login_challenge_token: loginChallenge || undefined, recaptcha_token: recaptchaToken, ...(channel ? { channel } : {}), ...(referralCode ? { referral_code: referralCode } : {}) },
       })
       if (result.recaptcha_required) { recaptchaPolicy.current = true; setRecaptchaRequired(true); setStep('identify'); setNotice('Complete reCAPTCHA, then continue.'); return }
       if (result.password_required) { setRecaptchaRequired(false); setRecaptchaToken(''); setActiveIdentifier(normalized); setLoginChallenge(result.login_challenge_token); setStep('password'); return }
@@ -210,7 +213,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     event.preventDefault()
     if (!phoneValid) { setError(mobileError(countryCode)); return }
     setBusy(true); setError('')
-    try { finish(await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', signup_token: googleSignup.signup_token, country_code: countryCode, mobile_number: identifier } })) }
+    try { finish(await clientApi('auth/google', { method: 'POST', auth: false, body: { provider: 'google', signup_token: googleSignup.signup_token, country_code: countryCode, mobile_number: identifier, ...(referralCode ? { referral_code: referralCode } : {}) } })) }
     catch (err) { setError(err.message) } finally { setBusy(false) }
   }
 
@@ -229,7 +232,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
     <div className={styles.authPanel}>
     <header className={styles.authHeader}><h1>{step === 'profile' ? 'Welcome to TempleAddress' : linkingMobile ? 'Add your mobile' : step === 'google_profile' ? 'Complete Google sign-in' : 'Please login to continue'}</h1><TempleMark size={32}/></header>
     <div className={styles.authBody}>
-    {step === 'identify' && <nav className={styles.authToggle} aria-label="Account access">{['login', 'register'].map(value => <a key={value} href={`/${value}${destination !== '/account' ? `?next=${encodeURIComponent(destination)}` : ''}`} aria-current={mode === value ? 'page' : undefined} className={mode === value ? styles.selected : undefined} onClick={event => { event.preventDefault(); reset(); setMode(value); setName(''); setEmail('') }}>{value === 'login' ? 'Login' : 'Register'}</a>)}</nav>}
+    {step === 'identify' && <nav className={styles.authToggle} aria-label="Account access">{['login', 'register'].map(value => <a key={value} href={`/${value}${switchQuery ? `?${switchQuery}` : ''}`} aria-current={mode === value ? 'page' : undefined} className={mode === value ? styles.selected : undefined} onClick={event => { event.preventDefault(); reset(); setMode(value); setName(''); setEmail('') }}>{value === 'login' ? 'Login' : 'Register'}</a>)}</nav>}
     <form onSubmit={submit} className="space-y-4">
       {step === 'identify' && <p className={styles.hint}>{mode === 'register' ? 'Create account and verify with OTP.' : 'Use your mobile number to receive OTP.'}</p>}
       {step === 'identify' && mode === 'register' && <Field label="Full name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} autoComplete="name" placeholder="Enter your name" required disabled={busy}/></Field>}

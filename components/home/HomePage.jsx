@@ -71,12 +71,14 @@ function HeroSlides({ images }) {
 
 function Hero({ images, counts }) {
   const stats = [[counts.temples, 'Verified temples'], [counts.festivals, 'Festivals'], [counts.services, 'Service professionals'], [counts.events, 'Events & special poojas']].filter(([value]) => value > 0)
-  return <section className="relative isolate overflow-hidden bg-brown-950 text-white">
-    <HeroSlides images={images}/>
-    <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-brown-950 via-brown-950/85 to-brown-950/30"/>
-    <div aria-hidden="true" className="hero-glow absolute -left-24 top-10 -z-10 h-96 w-96"/>
-    <svg aria-hidden="true" viewBox="0 0 200 200" className="animate-float absolute -right-16 bottom-0 -z-10 hidden h-[28rem] w-[28rem] text-gold-400/15 lg:block"><g fill="none" stroke="currentColor" strokeWidth=".6">{Array.from({ length: 12 }, (_, i) => <ellipse key={i} cx="100" cy="100" rx="88" ry="30" transform={`rotate(${i * 15} 100 100)`}/>)}<circle cx="100" cy="100" r="22"/><circle cx="100" cy="100" r="96"/></g></svg>
-    <div className="mx-auto max-w-6xl px-4 pb-24 pt-12 md:pb-32 md:pt-20">
+  return <section className="relative bg-brown-950 text-white">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 isolate overflow-hidden">
+      <HeroSlides images={images}/>
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-brown-950 via-brown-950/85 to-brown-950/30"/>
+      <div aria-hidden="true" className="hero-glow absolute -left-24 top-10 -z-10 h-96 w-96"/>
+      <svg aria-hidden="true" viewBox="0 0 200 200" className="animate-float absolute -right-16 bottom-0 -z-10 hidden h-[28rem] w-[28rem] text-gold-400/15 lg:block"><g fill="none" stroke="currentColor" strokeWidth=".6">{Array.from({ length: 12 }, (_, i) => <ellipse key={i} cx="100" cy="100" rx="88" ry="30" transform={`rotate(${i * 15} 100 100)`}/>)}<circle cx="100" cy="100" r="22"/><circle cx="100" cy="100" r="96"/></g></svg>
+    </div>
+    <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-12 md:pb-32 md:pt-20">
       <p className="fade-up inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-3 py-1 text-xs font-semibold text-gold-300 backdrop-blur"><ShieldCheck size={14} aria-hidden="true"/>Committee-verified temples · Zero platform fee</p>
       <h1 className="fade-up-1 mt-5 max-w-3xl text-4xl font-semibold leading-[1.08] md:text-6xl">Every temple. <span className="gold-text">One sacred address.</span></h1>
       <p className="fade-up-2 mt-4 max-w-2xl text-base text-brown-100 md:text-lg">Discover verified temples, festivals and spiritual services across Kerala and beyond. Book poojas, give donations and get your receipt instantly — online, on WhatsApp or in our app.</p>

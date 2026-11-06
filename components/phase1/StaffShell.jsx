@@ -54,7 +54,7 @@ export default function StaffShell({ children }) {
   const roles = rolesFor(user)
   const roleLabel = roles.includes('portal admin') ? 'Portal Admin' : roles.map(role => role[0].toUpperCase() + role.slice(1)).join(' / ')
   const navigation = [
-    ['Staff panel', ['/staff', '/staff/reviews', '/staff/kyc', '/staff/charts', '/staff/special', '/staff/ownership', '/staff/support', '/staff/wallet-credit', '/staff/listing', '/staff/events', '/staff/poojas', '/staff/enquiries', '/staff/directory/users', '/staff/directory/transactions', '/staff/directory/bookings']],
+    ['Staff panel', ['/staff', '/staff/reviews', '/staff/kyc', '/staff/advertisements', '/staff/charts', '/staff/special', '/staff/ownership', '/staff/support', '/staff/wallet-credit', '/staff/listing', '/staff/events', '/staff/poojas', '/staff/enquiries', '/staff/directory/users', '/staff/directory/transactions', '/staff/directory/bookings']],
     ['Accountant view', ['/staff/finance', '/staff/payouts', '/staff/withdrawals', '/staff/sponsors']],
     ['Administrator', ['/staff/analytics', '/staff/staff-management', '/staff/tables', '/staff/masterdata', '/staff/gateway-config', '/staff/config', '/staff/plans', '/staff/backup', '/staff/branding', '/staff/notifications', '/staff/bank-verification', '/staff/audit']],
   ].map(([group, paths]) => [group, staffLinks.filter(([url, , role]) => paths.includes(url) && canUseStaff(user, role)).sort((a, b) => paths.indexOf(a[0]) - paths.indexOf(b[0]))]).filter(([, links]) => links.length)

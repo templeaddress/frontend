@@ -3,18 +3,20 @@
 // Phase 2 panels on a public listing page: sponsor branding and slot, listing claim, and service appointment requests.
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CalendarClock, ShieldCheck } from 'lucide-react'
 import { clientApi, isVerifiedUser, readAuth, requireAuth } from '@/lib/client-api'
 import { indiaDate } from '@/lib/booking-dates'
 
 export function SponsorPanel({ listing }) {
   const [data, setData] = useState(null)
+  const params = useSearchParams(), referral = params.get('ref')
+  const checkout = new URLSearchParams({ slug: listing.slug, kind: 'third_party', ...(referral ? { ref: referral } : {}) })
   useEffect(() => { clientApi(`listings/${listing.slug}/sponsors`, { auth: false }).then(setData).catch(() => setData(null)) }, [listing.slug])
   if (!data) return null
   return <>
-    {data.sponsors.map(row => <div key={row.uuid} className="card p-4"><p className="mb-2 text-xs text-brown-500">Sponsored · {row.title}</p>{row.media_url && <img src={row.media_url} alt={`${row.title} sponsor banner`} className="w-full rounded-xl" loading="lazy"/>}{row.message && <p className="mt-2 text-sm">{row.message}</p>}{/^https?:\/\//.test(row.click_url || '') && <a href={row.click_url} rel="sponsored noopener noreferrer" target="_blank" className="text-sm underline">Visit sponsor</a>}</div>)}
-    {data.slot_available && <Link href={`/sponsor?slug=${listing.slug}&kind=third_party`} className="block rounded-2xl border-2 border-dashed border-brown-200 p-4 text-sm hover:bg-white"><b>Sponsor slot available</b><span className="block text-brown-500">Put your name on this {listing.listing_type}’s page, receipts and QR board.</span></Link>}
+    {data.sponsors.map(row => <div key={row.uuid} className="card p-4"><p className="mb-2 text-xs text-brown-500">Sponsored · {row.title}</p>{row.media_url && <img src={row.media_url} alt={`${row.title} sponsor banner`} className="w-full rounded-xl" loading="lazy"/>}{row.placements?.includes('sponsor_page') && <Link href={`/sponsors/${row.uuid}`} className="mb-2 block text-sm underline">About this sponsor</Link>}{row.message && <p className="mt-2 text-sm">{row.message}</p>}{/^https?:\/\//.test(row.click_url || '') && <a href={row.click_url} rel="sponsored noopener noreferrer" target="_blank" className="text-sm underline">Visit sponsor</a>}</div>)}
+    {data.slot_available && <Link href={`/sponsor?${checkout}`} className="block rounded-2xl border-2 border-dashed border-brown-200 p-4 text-sm hover:bg-white"><b>Sponsor slot available</b><span className="block text-brown-500">Support this {listing.listing_type} with the recognition included in your package.</span></Link>}
   </>
 }
 

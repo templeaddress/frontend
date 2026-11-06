@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   BadgeCheck, BarChart3, CalendarDays, Clock3, ExternalLink, Gift, Landmark,
@@ -162,7 +162,7 @@ export default function ListingDetailClient({ listing }) {
         <div className="card space-y-2 p-5">{canBook ? <Link className="btn-p w-full" href={`/book/${listing.slug}`}>Book pooja</Link> : <span className="btn-s w-full cursor-not-allowed">Booking currently unavailable</span>}{canDonate ? <Link className="btn-g w-full" href={`/donate/${listing.slug}`}>Donate</Link> : <span className="btn-g w-full cursor-not-allowed opacity-60">Donations unavailable</span>}<Link className="btn-wa w-full" href="/whatsapp"><MessageCircle size={16}/>Ask on WhatsApp</Link><p className="pt-2 text-xs text-brown-500">TempleAddress convenience fee is ₹0. Razorpay may show its processing charge inside checkout.</p></div>
         {listing.listing_type === 'service' && <AppointmentPanel listing={listing}/>}
         <ContactPanel listing={listing}/>
-        <SponsorPanel listing={listing}/>
+        <Suspense fallback={null}><SponsorPanel listing={listing}/></Suspense>
         <div className="card p-5"><h3 className="font-semibold">Quick info</h3><dl className="mt-4 grid gap-4"><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="Location" value={listing.district?.name_en}/><Fact label="Opening" value={openingText(periods)}/></dl></div>
         <div className="card p-5"><div className="flex items-center gap-2"><BarChart3 size={17}/><h3 className="font-semibold">Listing activity</h3></div><div className="mt-3 grid grid-cols-2 gap-2"><Metric label="Views" value={listing.analytics?.views}/><Metric label="Shares" value={listing.analytics?.shares}/><Metric label="Contacts" value={listing.analytics?.contact_reveals}/><Metric label="Enquiries" value={listing.analytics?.enquiries}/></div></div>
         <div className="card p-5 text-center"><div className="mx-auto w-fit rounded-xl border-4 border-brown-900 bg-white p-2"><QRCodeSVG value={pageUrl} size={112}/></div><p className="mt-3 text-sm font-semibold">{listingLabel} QR code</p><p className="text-xs text-brown-500">Scan to open this verified page.</p></div>
