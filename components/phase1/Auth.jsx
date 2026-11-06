@@ -258,3 +258,4 @@ export default function Phase1Login({ initialMode = 'login' }) {
     <p className="mt-5 text-center text-sm"><Link href="/temples" className="text-saffron-700">Continue browsing without login</Link></p>
   </main></PublicShell>
 }
+//
