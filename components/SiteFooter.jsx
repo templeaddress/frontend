@@ -34,7 +34,7 @@ export default function SiteFooter() {
           </div>
           <div className="mt-5 space-y-1.5 text-sm">
             <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white"><MessageCircle size={15} className="text-[#25D366]" aria-hidden="true"/>WhatsApp {SITE.whatsappDisplay}</a>
-            <a href={`mailto:${SITE.supportEmail}`} className="flex items-center gap-2 hover:text-white"><Mail size={15} className="text-gold-400" aria-hidden="true"/>{SITE.supportEmail}</a>
+            <a href={`mailto:${SITE.email}`} className="flex items-center gap-2 hover:text-white"><Mail size={15} className="text-gold-400" aria-hidden="true"/>{SITE.email}</a>
             <p className="ml flex items-center gap-2 text-brown-200"><Landmark size={15} className="text-gold-400" aria-hidden="true"/>{SITE.languages}</p>
           </div>
           {SITE.social.length > 0 && <ul aria-label="TempleAddress on social media" className="mt-5 flex gap-2">{SITE.social.map(([key, label, url]) => { const Icon = SOCIAL_ICONS[key]; return <li key={key}><a href={url} target="_blank" rel="noopener noreferrer" aria-label={label} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-saffron-500"><Icon size={17} aria-hidden="true"/></a></li> })}</ul>}

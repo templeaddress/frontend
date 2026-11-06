@@ -13,7 +13,7 @@ export default function WhatsAppSupportPage() {
     <div className="card p-8 text-center">
       <h1 className="text-3xl font-semibold">WhatsApp support</h1>
       <p className="mt-3 text-brown-600">We use WhatsApp for approved alerts, receipts and chart delivery. Interactive WhatsApp booking is not available yet.</p>
-      <a className="btn-wa mt-6" href="https://wa.me/919495041196" target="_blank" rel="noreferrer">Message +91 9495 041196</a>
+      <a className="btn-wa mt-6" href="https://wa.me/919495041196" target="_blank" rel="noreferrer">Message +91 94950 41196</a>
       <Link className="btn-g mt-3" href="/temples">Browse temples</Link>
     </div>
   </main></PublicShell>
