@@ -44,6 +44,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'templeaddress-cloud.s3.amazonaws.com' },
       // Listing photos are also served from the bucket's regional endpoint.
       { protocol: 'https', hostname: 'templeaddress-cloud.s3.ap-south-1.amazonaws.com' },
+      // Seed/demo records may still carry these placeholders until approved media is uploaded.
+      { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'fonts.googleapis.com' },
     ],
   },
