@@ -29,7 +29,7 @@ export default function SiteFooter() {
           <p className="mt-3 max-w-xs text-sm text-brown-200">{SITE.tagline} Discover verified temples, book poojas and donate with zero platform fee.</p>
           <div className="mt-4 flex flex-wrap gap-2 text-[11px]"><Chip icon={ShieldCheck}>Committee verified</Chip><Chip icon={Lock}>Secure payments</Chip></div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link href="/download-app/android" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Smartphone size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200">Get it for</small><b className="text-sm text-white">Android</b></span></Link>
+            <a href="/download-app/android" download="TempleaddressApp.apk" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Smartphone size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200">Get it for</small><b className="text-sm text-white">Android</b></span></a>
             <Link href="/download-app" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Apple size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200">Download for</small><b className="text-sm text-white">iPhone</b></span></Link>
           </div>
           <div className="mt-5 space-y-1.5 text-sm">
