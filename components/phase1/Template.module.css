@@ -1,0 +1,113 @@
+/* Scoped adaptations of the original temple-app booking, account and receipt templates. */
+.bookingPage { max-width: 1280px; margin: 0 auto; padding: 1rem 1rem 3rem; color: #111827; }
+.bookingPage h1, .bookingPage h2, .bookingPage h3,
+.accountPage h1, .accountPage h2, .accountPage h3,
+.authPanel h1, .receiptPage h1, .receiptPage h2 { font-family: inherit; }
+.pageHeader { margin-bottom: 1rem; }
+.pageHeader h1 { font-size: 2rem; font-weight: 600; }
+.hint { color: #6b7280; font-size: .9rem; }
+.stepper { display: grid; grid-template-columns: repeat(4, 1fr); margin: 1.25rem 0 1.5rem; }
+.step { display: flex; align-items: center; min-width: 0; }
+.stepDot { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #ecebe7; color: #7c7a74; flex-shrink: 0; font-weight: 600; }
+.stepActive { background: #ca6b1f; color: #fff; }
+.stepLine { height: 3px; flex: 1; background: #ecebe7; margin: 0 .6rem; }
+.stepDone { background: #ca6b1f; }
+.selectionStage { padding-bottom: 7rem; }
+.section { background: #fff; border: 1px solid #e8e1d4; border-radius: 18px; padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 6px 24px #0f172a0a; }
+.section h2 { font-size: 1.45rem; font-weight: 600; margin-bottom: .8rem; }
+.poojaCard { border: 1px solid #e8e1d4; border-radius: 14px; background: #fff; padding: 1rem; margin-top: .8rem; }
+.poojaHeader { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+.poojaHeader h3 { font-size: 1.15rem; font-weight: 600; }
+.price { color: #ca6b1f; font-size: 1.3rem; font-weight: 700; white-space: nowrap; }
+.summaryBar { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 20; display: flex; width: min(calc(100vw - 2rem), 1280px); align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 999px; background: linear-gradient(180deg, #f7812d, #ff7a1a); color: #fff; padding: .9rem 1rem .9rem 2rem; text-align: left; box-shadow: 0 10px 22px #ff7a1a47, inset 0 2px 3px #ffffff38; }
+.summaryBar:focus-visible { outline: 3px solid #8a3f05; outline-offset: 3px; }
+.summaryInfo { display: flex; flex-direction: column; gap: .1rem; }
+.summaryInfo > span { font-size: .86rem; }
+.summaryContinue { flex-shrink: 0; border: 2px solid #fff5e4b8; border-radius: 999px; background: linear-gradient(180deg, #fff4de, #ffe2ad); color: #8a3f05; padding: .8rem 1.3rem; font-weight: 700; }
+.selectionDialog { width: min(720px, calc(100vw - 2rem)); max-height: 85vh; margin: auto; border: 1px solid #eadbca; border-radius: 20px; background: #fff8f2; padding: 1.3rem; color: #111827; box-shadow: 0 24px 54px #0f172a40; }
+.selectionDialog::backdrop { background: #0f172a8c; }
+.selectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.selectionHeader h2 { font-family: inherit; font-size: 1.5rem; font-weight: 600; }
+.summaryItem { padding: .8rem 0; border-bottom: 1px solid #e8e1d4; }
+.summaryItem p { color: #6b7280; font-size: .85rem; overflow-wrap: anywhere; }
+.summaryActions { display: flex; gap: .75rem; margin-top: .5rem; font-size: .85rem; }
+.total { display: flex; justify-content: space-between; gap: 1rem; padding-top: 1rem; margin-top: .75rem; border-top: 1px solid #e8e1d4; font-weight: 700; }
+.bookingPage :global(.btn-p) { background: #4c6138; border-radius: 10px; }
+.bookingPage :global(.btn-p):hover { background: #3d4f2c; }
+.formCard { max-width: 760px; margin: 1.5rem auto 0; }
+.verify { text-align: center; }
+.verify h2 { margin: .8rem 0; }
+.centerIcon { display: grid; place-items: center; color: #ca6b1f; margin: 0 auto .8rem; }
+.otpGroup { border: 0; margin: 1.2rem 0; padding: 0; min-width: 0; }
+.otpGroup legend { margin-bottom: .6rem; font-weight: 600; font-size: .9rem; }
+.otpRow { display: flex; justify-content: center; gap: .45rem; }
+.otpInput { width: 46px; min-width: 0; height: 50px; border: 1px solid #d5cab6; border-radius: 10px; background: #fff; text-align: center; font-size: 1.2rem; }
+.otpInput:focus { outline: 2px solid #ca6b1f; outline-offset: 2px; }
+.authPage { min-height: 65vh; padding: 2rem 1rem 3rem; background: linear-gradient(180deg, #ebe5d6 0%, #ebe5d6 58%, #edf0f5 58%); }
+.authPanel { max-width: 520px; margin: auto; border-radius: 16px; background: #f8f4eb; border: 1px solid #e8dcc8; box-shadow: 0 26px 48px #11182726; overflow: hidden; }
+.authHeader { padding: 1rem; border-bottom: 1px solid #e5ddcf; color: #7f1d1d; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.authHeader h1 { font-size: 1.15rem; font-weight: 700; }
+.authBody { padding: 1rem; }
+.authToggle { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #dfd5c4; border-radius: 10px; overflow: hidden; margin-bottom: 1rem; }
+.authToggle a { text-align: center; padding: .6rem; background: #fff; color: #6b7280; font-weight: 700; }
+.authToggle .selected { background: #9b0000; color: #fff; }
+.authPanel :global(.input) { border-radius: 9px; border-color: #d5cab6; }
+.authPanel :global(.btn-p), .accountPage :global(.btn-p) { background: #9b0000; border-radius: 10px; }
+.authPanel :global(.btn-p):hover, .accountPage :global(.btn-p):hover { background: #7f0000; }
+.googleCard { border: 1px solid #ece2d0; border-radius: 12px; background: #fcfaf4; padding: .85rem; display: grid; gap: .7rem; }
+.accountPage { max-width: 980px; margin: auto; padding: 1.4rem 1rem 2rem; }
+.profileBanner { border-radius: 24px; padding: 1.3rem; background: linear-gradient(170deg, #8f0000, #7f0000 55%, #5c0000); color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.profileIdentity { display: flex; align-items: center; gap: .85rem; }
+.profileIdentity h1 { font-size: 1.45rem; font-weight: 700; }
+.avatar { width: 64px; height: 64px; border-radius: 50%; border: 2px solid #ffffff73; display: grid; place-items: center; font-size: 1.45rem; font-weight: 800; background: #ffffff1f; flex-shrink: 0; }
+.profileContact { color: #ffebcf; margin-top: .25rem; font-size: .9rem; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin: 1rem 0; }
+.stat { border: 1px solid #e8e1d4; border-radius: 14px; padding: .85rem; background: #fff; text-align: left; }
+.stat span { display: block; color: #6b7280; font-size: .85rem; }
+.stat strong { display: block; margin-top: .2rem; font-size: 1.15rem; color: #111827; }
+.quickActions { background: linear-gradient(180deg, #fff8ec, #fff4e2); border: 1px solid #ebdbbf; border-radius: 18px; padding: 1rem; margin-top: 1rem; }
+.quickActions h2 { color: #7f1d1d; font-weight: 700; }
+.accountPage :global(.card) { border: 1px solid #e8e1d4; border-radius: 18px; box-shadow: 0 12px 24px #0f172a0a; }
+.accountPage :global(.card h2) { font-size: 1.15rem; }
+.bookingRecord { padding: 1rem; border: 1px solid #e8e1d4; border-radius: 14px; background: #fff; }
+.recordTop { display: flex; justify-content: space-between; align-items: start; gap: .75rem; flex-wrap: wrap; }
+.recordItems { margin: .8rem 0; border-top: 1px solid #eee7dc; }
+.recordItem { display: flex; justify-content: space-between; gap: 1rem; padding-top: .6rem; font-size: .9rem; }
+.recordActions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-top: .8rem; }
+.filters { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+.filters button { padding: .4rem .85rem; border: 1px solid #dfd5c4; border-radius: 999px; background: #fff; font-size: .85rem; }
+.filters button[aria-pressed=true] { background: #9b0000; color: white; border-color: #9b0000; }
+.receiptPage { max-width: 980px; margin: 2rem auto 3rem; padding: 0 1rem; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.receiptCard { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 12px 28px #0f172a14; padding: 1.25rem; overflow-wrap: anywhere; }
+.receiptBrand { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: start; }
+.receiptBrand h1 { font-size: 1.8rem; font-weight: 700; }
+.templeTitle { color: #7f271e; font-size: 1.45rem; font-weight: 800; margin-top: .45rem; }
+.status { display: inline-flex; border: 1px solid #d1d5db; border-radius: 999px; padding: .25rem .8rem; font-size: .8rem; font-weight: 700; text-transform: capitalize; background: #f8fafc; }
+.meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem 1rem; margin: 1rem 0 1.25rem; font-size: .9rem; }
+.receiptSection { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; margin-top: 1rem; }
+.receiptSection h2 { font-size: 1.2rem; font-weight: 700; }
+.tableScroll { overflow-x: auto; margin-top: .8rem; }
+.itemTable { width: 100%; border-collapse: collapse; font-size: .85rem; text-align: left; }
+.itemTable th { background: #f8fafc; font-weight: 700; }
+.itemTable th, .itemTable td { padding: .7rem .5rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+.invoiceRow { display: flex; justify-content: space-between; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid #e5e7eb; }
+@media (max-width: 560px) {
+  .summaryBar { bottom: 0; width: 100%; border-radius: 18px 18px 0 0; padding: .8rem 1rem calc(.8rem + env(safe-area-inset-bottom)); gap: .5rem; }
+  .summaryContinue { padding: .65rem .85rem; font-size: .85rem; }
+  .summaryInfo { font-size: .85rem; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta { grid-template-columns: 1fr; }
+  .otpInput { width: 38px; height: 46px; }
+  .otpRow { gap: .3rem; }
+  .authPage { padding: 1rem .6rem 2rem; }
+  .bookingPage { padding: 1rem .75rem 2rem; }
+  .section { padding: 1rem; }
+  .receiptCard, .receiptSection { padding: .8rem; }
+}
+@media print {
+  .receiptCard { border: 0; box-shadow: none; border-radius: 0; }
+  .tableScroll { overflow: visible; }
+  .itemTable { font-size: 9pt; }
+  .itemTable tr { break-inside: avoid; }
+}

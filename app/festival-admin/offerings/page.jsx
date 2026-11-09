@@ -1,0 +1,3 @@
+import { Suspense } from 'react'
+import { VendorPoojas } from '@/components/phase1/Vendor'
+export default function Page() { return <Suspense fallback={null}><VendorPoojas/></Suspense> }
