@@ -23,26 +23,16 @@ import { whatsappLink } from '@/lib/site'
 import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple, Award } from 'lucide-react'
 
 /* ── BRAND MARK ── */
+// Crop the supplied PNG's transparent padding without changing the artwork.
 export const TempleMark = ({ size = 36, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 64 68" className={`shrink-0 ${className}`} aria-hidden>
-    <path d="M32 4c14.36 0 26 11.4 26 25.4 0 9.86-5.9 17.9-11.6 24.2-4.2 4.6-8.4 8-11.9 10.2a2 2 0 0 1-2.2 0c-3.5-2.2-7.7-5.6-11.9-10.2C11.9 47.3 6 39.26 6 29.4 6 15.4 17.64 4 32 4Z" fill="#C9541E"/>
-    <circle cx="32" cy="29" r="16" fill="#fff"/>
-    <g fill="#4A3527">
-      <path d="M32 15.2 33.6 18h-3.2Z"/><path d="M32 17.2 38 22H26Z"/>
-      <path d="M32 21.1 39.4 26H24.6Z"/><path d="M32 25 40.6 30.2H23.4Z"/>
-      <rect x="23.4" y="30" width="17.2" height="7.2" rx="1.1"/>
-      <rect x="26.2" y="32" width="2.4" height="5.2" fill="#fff"/>
-      <rect x="35.4" y="32" width="2.4" height="5.2" fill="#fff"/>
-    </g>
-  </svg>
+  <img src="/templeaddress-logo.png" alt="TempleAddress" width={size * 3.75} height={size}
+    className={`shrink-0 ${className}`}
+    style={{ width: size * 3.75, height: size, objectFit: 'cover' }}/>
 )
 
 export const Logo = ({ light, className = '', markSize = 34 }) => (
   <Link href="/" className={`inline-flex items-center gap-2 ${className}`}>
-    <TempleMark size={markSize} />
-    <span className={`font-display text-xl font-semibold leading-none tracking-tight ${light ? 'text-white' : 'text-brown-800'}`}>
-      Temple<span className={light ? 'text-gold-300' : 'text-brown-800'}>Address</span>
-    </span>
+    <TempleMark size={markSize} className={light ? 'brightness-0 invert' : ''}/>
   </Link>
 )
 
