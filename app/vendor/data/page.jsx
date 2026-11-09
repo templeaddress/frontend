@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { VData } from '@/components/pages/vendor'
-export default function Page(props) { return <Suspense fallback={null}><VData {...props}/></Suspense> }
+import { VendorData } from '@/components/phase1/Vendor'
+export default function Page() { return <Suspense fallback={null}><VendorData/></Suspense> }

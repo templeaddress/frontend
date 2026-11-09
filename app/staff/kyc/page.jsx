@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SKyc } from '@/components/pages/partners'
-export const metadata = { title: 'KYC Queue' }
-export default function Page(props) { return <Suspense fallback={null}><SKyc {...props}/></Suspense> }
+import { StaffKyc } from '@/components/phase1/StaffModeration'
+export const metadata = { title: 'KYC & partners' }
+export default function Page() { return <Suspense fallback={null}><StaffKyc/></Suspense> }

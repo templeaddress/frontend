@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SSpecial } from '@/components/pages/partners'
+import StaffEvents from '@/components/phase1/StaffEvents'
 export const metadata = { title: 'Special Poojas' }
-export default function Page(props) { return <Suspense fallback={null}><SSpecial {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><StaffEvents special/></Suspense> }

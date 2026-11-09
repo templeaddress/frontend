@@ -1,5 +1,76 @@
 # TempleAddress — Next.js frontend (SSR, SSG, ISR and Tailwind)
 
+Demo portals are disabled unless `/api/v1/config` returns
+`feature_flags.demo_portals: true` (a JSON boolean). This flag controls the vendor,
+festival admin, service admin, partner and dealer routes, mock staff pages and
+their public footer links. Keep it off on production; API-backed staff routes
+remain available under their existing permissions. The flag defaults off if
+configuration cannot be loaded. It controls demo visibility, not API authorization.
+
+When running behind an ingress, set `TRUSTED_CLIENT_IP_HEADER` only to a header
+the ingress overwrites with the actual client IP (for example `x-real-ip`), and
+block direct access bypassing the ingress. Configure the corresponding proxy
+CIDRs in Django's `CONTACT_REVEAL_TRUSTED_PROXIES`; see the backend README.
+
+## Mobile app downloads
+
+`/download-app` is the public app landing page. The footer's Downloads and Get
+the app links open it. Android uses `/download-app/android`, matching
+`old-code/landingpage-next`; `/download-android` remains an alias. iOS keeps its
+existing optional App Store redirect at `/download-ios`.
+Buttons show Coming soon when their URL is empty or invalid. Existing account,
+booking, payment and policy routes are unchanged.
+
+The environment stores the **download URL**, not the APK file. To enable Android:
+
+1. Build a signed, standalone release APK that runs without Metro. Do not publish
+   the Expo development-client/debug APK used for emulator testing.
+2. Use the direct APK artifact URL from the completed EAS build, or upload the
+   release APK to your file host. For EAS, use the `.apk` artifact link, not the
+   build-details page. The file must be downloadable without a login. Publishing
+   the app on Google Play is not required.
+3. Add the URL to the frontend's `.env.local`:
+
+   ```dotenv
+   ANDROID_APK_URL=https://your-download-host.example/templeaddress-v3.0.1.apk
+   ANDROID_APK_DOWNLOAD_MODE=proxy
+   IOS_APP_STORE_URL=
+   ```
+
+   The old landing page's `NEXT_PUBLIC_ANDROID_APP_URL` is also supported when
+   `ANDROID_APK_URL` is blank. Prefer the server-only `ANDROID_APK_URL` for new
+   configuration; the legacy public variable is bundled at build time.
+
+4. Restart `npm run dev` locally. On Amplify, add `ANDROID_APK_URL` under the
+   branch's environment variables and set `ANDROID_APK_DOWNLOAD_MODE=redirect`,
+   then redeploy. `amplify.yml` writes these settings into `.env.production` and
+   defaults Amplify to redirect mode. Set `IOS_APP_STORE_URL` to the App Store
+   link when the iOS release is available.
+5. Open `/download-app` and click Download APK for Android. Also check
+   `/download-app/android` directly: proxy mode returns the APK as an attachment
+   named `TempleaddressApp.apk`; redirect mode opens the configured artifact.
+
+Alternatively, deploy the APK at `public/downloads/templeaddress-v3.0.1.apk` and set
+`ANDROID_APK_URL=/downloads/templeaddress-v3.0.1.apk`. The file must be included in
+the deployment. Files under `public/` are public; an environment value alone does
+not upload or create a file. Use a versioned filename when replacing the release.
+
+Proxy mode follows the old landing page: the Next.js Node route fetches the
+artifact without caching and streams its body with APK content type and an
+attachment filename. Missing configuration returns 503; unavailable artifacts
+or HTML/JSON error pages return a readable 502 response. APK bytes are not
+buffered into server memory. No backend changes or database migrations are required.
+
+Amplify Hosting currently documents a 5.72 MB compute-response limit and no
+Next.js streaming support. A normal APK exceeds that limit. Use redirect mode
+on Amplify so the file is downloaded directly from EAS/S3/CloudFront. Configure
+the file host's `Content-Type` as `application/vnd.android.package-archive` and
+`Content-Disposition` as `attachment; filename="TempleaddressApp.apk"` when
+using redirect mode. This still downloads the APK without the Play Store.
+Use proxy mode with a Node host that supports streaming large responses.
+See [AWS response limits](https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-SSR.html)
+and [Next.js support on Amplify](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-amplify-support.html).
+
 ## Authoritative product baseline
 
 The current product requirements are defined only by the following sources:

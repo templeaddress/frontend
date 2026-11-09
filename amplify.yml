@@ -1,0 +1,23 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 22
+        - nvm use 22
+        - npm ci
+        - test -n "$TEMPLEADDRESS_API_URL"
+    build:
+      commands:
+        - env | grep '^TEMPLEADDRESS_API_URL=' >> .env.production
+        - env | grep -E '^(NEXT_PUBLIC_APP_ENV|NEXT_PUBLIC_DEMO_PORTALS_ENABLED|TRUSTED_CLIENT_IP_HEADER|SSR_API_KEY|ANDROID_APK_URL|NEXT_PUBLIC_ANDROID_APP_URL|IOS_APP_STORE_URL|NEXT_PUBLIC_SOCIAL_[A-Z]+|NEXT_PUBLIC_DPIIT_NUMBER|NEXT_PUBLIC_UDYAM_NUMBER|NEXT_PUBLIC_GSTIN)=' >> .env.production || true
+        - 'printf "ANDROID_APK_DOWNLOAD_MODE=%s\n" "${ANDROID_APK_DOWNLOAD_MODE:-redirect}" >> .env.production'
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

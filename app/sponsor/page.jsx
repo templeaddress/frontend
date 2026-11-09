@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
-import { Sponsor } from '@/components/pages/public'
+import { PageIntro } from '@/lib/seo'
+import { SponsorCheckout } from '@/components/phase1/Sponsor'
 export const metadata = { title: 'Sponsor a Temple', description: 'Support a verified temple with a transparent TempleAddress sponsorship package.', alternates: { canonical: '/sponsor' } }
-export default function Page(props) { return <Suspense fallback={null}><Sponsor {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={<PageIntro title="Sponsor a temple" text="Support a verified temple with a transparent TempleAddress sponsorship package."/>}><SponsorCheckout/></Suspense> }

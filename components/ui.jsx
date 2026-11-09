@@ -8,12 +8,19 @@
  *   - usePathname from next/navigation (replaces useLocation)
  *   - LanguageControl from @/components/LanguageControl
  */
-import { Suspense, useCallback, useState, useEffect } from 'react'
+import { Suspense, useCallback, useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
-import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2 } from 'lucide-react'
+import { clientApi, readAuth, subscribeAuth } from '@/lib/client-api'
+import { rolesFor, staffLanding } from '@/lib/staff-access'
+import { vendorLanding } from '@/lib/vendor'
+import { useDemoPortals } from './DemoPortalGate'
+import SiteFooter from '@/components/SiteFooter'
+import ReferralSignInLink from '@/components/ReferralSignInLink'
+import { whatsappLink } from '@/lib/site'
+import { MessageCircle, Menu, X, Sparkles, Send, ChevronRight, ChevronDown, Bell, ShieldCheck, Lock, Zap, ArrowLeftRight, Rocket, Globe2, Smartphone, Apple, Award } from 'lucide-react'
 
 /* ── BRAND MARK ── */
 export const TempleMark = ({ size = 36, className = '' }) => (
@@ -50,7 +57,7 @@ export const GoogleIcon = ({ size = 18, className = '' }) => (
 
 export const TrustBadges = ({ className = '' }) => (
   <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-    {[[Zap,'Razorpay'],[ArrowLeftRight,'UPI'],[Globe2,'Digital India'],[Rocket,'Startup India'],[Sparkles,'Kerala Startup Mission']].map(([I, l]) =>
+    {[[Zap,'Razorpay'],[ArrowLeftRight,'UPI'],[Globe2,'Digital India'],[Rocket,'Startup India'],[Award,'MSME'],[Sparkles,'Kerala Startup Mission']].map(([I, l]) =>
       <span key={l} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-medium text-brown-100"><I size={13} className="text-gold-400"/>{l}</span>)}
   </div>
 )
@@ -173,7 +180,31 @@ export const Money   = ({ v }) => <span className="tabular-nums">₹{Number(v).t
 const pubNav = [['/', 'Home'], ['/temples', 'Temples'], ['/special', 'Special poojas'], ['/festival', 'Festivals'], ['/services', 'Services']]
 
 export function PublicShell({ children, tenant, hideChatbot = false, booking = false }) {
+  const demoPortals = useDemoPortals()
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const access = useSyncExternalStore(subscribeAuth, () => readAuth()?.access || '', () => '')
+  const [vendorAccount, setVendorAccount] = useState({ access: '', path: null })
+  const defaultAccountPath = useSyncExternalStore(subscribeAuth, () => {
+    const session = readAuth()
+    if (!session?.access) return '/login'
+    if (rolesFor(session.user).length) return staffLanding(session.user)
+    return session.user?.is_staff ? '/staff' : '/account'
+  }, () => '/login')
+  useEffect(() => {
+    if (!access || defaultAccountPath !== '/account') return
+    let active = true
+    clientApi('me/managed-listings').then(rows => {
+      let saved = null
+      try { saved = window.localStorage.getItem('ta-vendor-listing') } catch {}
+      if (active) setVendorAccount({ access, path: vendorLanding(rows, saved) })
+    }).catch(() => { if (active) setVendorAccount({ access, path: null }) })
+    return () => { active = false }
+  }, [access, defaultAccountPath, pathname])
+  const vendorPath = defaultAccountPath === '/account' && vendorAccount.access === access ? vendorAccount.path : null
+  const accountPath = vendorPath || defaultAccountPath
+  const signedIn = accountPath !== '/login'
+  const AccountLink = signedIn ? Link : ReferralSignInLink
   const lightHeader = tenant || booking
   return (
     <div className={`${tenant ? 'tenant' : ''} ${booking ? 'booking-shell' : ''}`}>
@@ -183,7 +214,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
             ? <Link href="/t/kottur-sree-mahavishnu-temple" className="font-display text-lg font-semibold">{tenant}</Link>
             : <Logo light={!lightHeader} />}
           {!tenant && (
-            <nav className="ml-4 hidden gap-1 md:flex">
+            <nav className="ml-4 hidden gap-1 whitespace-nowrap md:flex">
               {pubNav.map(([href, label]) => (
                 <ActiveLink key={href} href={href} end={href === '/'} className={({ isActive }) =>
                   `rounded-lg px-3 py-1.5 text-sm font-medium ${lightHeader
@@ -197,9 +228,9 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           <div className="flex-1" />
           <LanguageControl />
           {!booking && <Link href="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
-          <Link href="/login" className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            {booking ? 'Login / Register' : 'Login'}
-          </Link>
+          <AccountLink href={accountPath} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+            {signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : vendorPath ? 'Vendor Panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}
+          </AccountLink>
           <button className={`md:hidden ${lightHeader ? 'text-brown-800' : ''}`} onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}
           </button>
@@ -214,52 +245,8 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
 
       <main className="min-h-[70vh]">{children}</main>
 
-      <footer className="mt-16 bg-brown-900 text-brown-100">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-4">
-          <div>
-            <Logo light />
-            <p className="mt-2 text-sm text-brown-200">A digital address for every temple. Zero platform fee on vazhipadu and donations.</p>
-            <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-              <span className="pill glass text-brown-50"><ShieldCheck size={12} className="text-emerald-300"/>Committee verified</span>
-              <span className="pill glass text-brown-50"><Lock size={12} className="text-gold-400"/>Secure payments</span>
-            </div>
-          </div>
-          <div className="text-sm">
-            <b className="text-white">For temples</b><br/>
-            <Link href="/submit-temple" className="hover:text-white">Submit a temple</Link><br/>
-            <Link href="/login?next=/account/listings/new&intent=create-profile" className="hover:text-white">Create a profile</Link><br/>
-            <Link href="/vendor" className="hover:text-white">Temple login</Link><br/>
-            <Link href="/sponsor" className="hover:text-white">Sponsor a temple</Link>
-          </div>
-          <div className="text-sm">
-            <b className="text-white">Partners</b><br/>
-            <Link href="/partner" className="hover:text-white">Become a partner</Link><br/>
-            <Link href="/dealer" className="hover:text-white">Dealer portal</Link><br/>
-            <Link href="/staff" className="hover:text-white">Staff panel</Link>
-          </div>
-          <div className="text-sm">
-            <b className="text-white">Devotee support</b><br/>
-            <Link href="/whatsapp" className="hover:text-white">WhatsApp +91 9495 041196</Link><br/>
-            help@templeaddress.com<br/>
-            English · മലയാളം
-          </div>
-        </div>
-        <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-xs text-brown-200">Payments by <b className="text-brown-100">Razorpay · PayU · Stripe · Omniware</b> — TempleAddress never stores card details.</span>
-              <TrustBadges />
-            </div>
-            <div className="flex flex-col gap-1 text-xs text-brown-300 sm:flex-row sm:items-center sm:justify-between">
-              <nav aria-label="Policies" className="flex flex-wrap gap-3">
-                {[['terms','Terms'],['privacy','Privacy'],['data','Data'],['cancellation','Cancellation'],['refund','Refunds']].map(([path, label]) =>
-                  <Link key={path} href={`/policies/${path}`} className="underline hover:text-white">{label}</Link>)}
-              </nav>
-              <span>© 2026 TempleAddress</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter/>
+      {!hideChatbot && !booking && <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" aria-label="Chat with TempleAddress on WhatsApp" className="fixed bottom-5 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-soft transition hover:scale-105 md:left-6"><MessageCircle size={24} aria-hidden="true"/></a>}
       {!hideChatbot && <Chatbot />}
     </div>
   )
@@ -341,51 +328,52 @@ export function DashShell(props) {
   return <Suspense fallback={<div className="min-h-screen bg-brown-50" />}><DashShellContent {...props} /></Suspense>
 }
 
-/* ── CHATBOT (RAG-style) ── */
-const kb = [
-  [/timing|time|open/i,    'Kottur Sree Mahavishnu Temple is open 5:30–9:30 AM and 5:30–7:30 PM. Source: temple page.'],
-  [/ganapathi|homam/i,     'Ganapathi Homam is ₹250, limited to 20 per day. 14 slots left for tomorrow. Want me to start a booking?'],
-  [/book|pooja/i,          'You can book on this site, on WhatsApp (+91 9495 041196) or in the app. Which temple?'],
-  [/donation|donate/i,     'Donate through the temple page and receive a receipt. Which temple would you like to support?'],
-  [/cancel|refund/i,       'Cancel or reschedule until the chart closes (8:00 PM the day before). Refunds in 5–7 days to the same method.'],
-  [/santhana|child/i,      'Santhanagopala Pooja is the temple\'s speciality — ₹1,500, 3 per day, book at least a day ahead.'],
-]
-
+/* ── CHATBOT ── answers come from the TempleAddress assistant API (published listing data only) */
 export function Chatbot() {
-  const [open, setOpen] = useState(false)
-  const [msgs, setMsgs] = useState([{ me: false, t: 'Namaskaram 🙏 I can help with timings, poojas, booking and donations. Ask in English or Malayalam.' }])
-  const [q, setQ] = useState('')
-  const ask = useCallback(text => {
-    const t = text || q; if (!t) return
-    const a = (kb.find(([r]) => r.test(t)) || [null, 'I don\'t have that yet — I\'ll pass this to devotee support on WhatsApp, or try asking about timings, poojas or donations.'])[1]
-    setMsgs(m => [...m, { me: true, t }, { me: false, t: a }]); setQ('')
-  }, [q])
+  const pathname = usePathname()
+  const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [q, setQ] = useState(''), [language, setLanguage] = useState('en')
+  const [msgs, setMsgs] = useState([]), [suggestions, setSuggestions] = useState([])
+  const slug = pathname?.match(/^\/t\/([^/]+)/)?.[1] || ''
+  useEffect(() => {
+    if (!open || msgs.length) return
+    clientApi(`assistant?language=${language}`, { auth: false }).then(data => { setMsgs([{ me: false, t: data.message }]); setSuggestions(data.suggestions) }).catch(() => setMsgs([{ me: false, t: 'Namaskaram 🙏 Ask about timings, poojas, booking or donations.' }]))
+  }, [open, language, msgs.length])
+  const ask = useCallback(async text => {
+    const t = (text || q).trim(); if (!t || busy) return
+    setMsgs(m => [...m, { me: true, t }]); setQ(''); setBusy(true)
+    try {
+      const data = await clientApi('assistant', { method: 'POST', auth: false, body: { message: t, language, listing_slug: slug } })
+      setMsgs(m => [...m, { me: false, t: data.message, listing: data.listing, handoff: data.handoff }]); setSuggestions(data.suggestions || [])
+    } catch (err) { setMsgs(m => [...m, { me: false, t: err.message || 'The assistant is unavailable right now.' }]) } finally { setBusy(false) }
+  }, [q, busy, language, slug])
   useEffect(() => {
     const h = e => { setOpen(true); if (e.detail) setTimeout(() => ask(e.detail), 250) }
     window.addEventListener('ta:ask', h); return () => window.removeEventListener('ta:ask', h)
   }, [ask])
+  // Checkout pages keep a sticky action bar in the same corner; the assistant stays out of the way there.
+  if (/^\/(book|donate)\//.test(pathname || '')) return null
   return (
     <>
       <button onClick={() => setOpen(!open)} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-brown-900 px-4 py-3 text-sm font-semibold text-white shadow-soft">
         <Sparkles size={16} className="text-gold-400"/>Ask TempleAddress
       </button>
       {open && (
-        <div className="fixed bottom-20 right-5 z-40 flex h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-brown-200">
+        <div role="dialog" aria-label="Temple assistant" className="fixed bottom-20 right-5 z-40 flex h-[480px] w-[min(360px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-brown-200">
           <div className="flex items-center gap-2 bg-brown-900 px-4 py-3 text-white">
             <Sparkles size={16} className="text-gold-400"/><b className="text-sm">Temple assistant</b>
-            <span className="ml-auto text-[10px] text-brown-200">RAG on TempleAddress data</span>
+            <button onClick={() => { setLanguage(l => l === 'en' ? 'ml' : 'en'); setMsgs([]) }} className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px]" aria-label="Switch language">{language === 'en' ? 'മലയാളം' : 'English'}</button>
             <button onClick={() => setOpen(false)} className="ml-1 rounded p-0.5 hover:bg-white/10" aria-label="Close chat"><X size={14}/></button>
           </div>
-          <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">
-            {msgs.map((m, i) => <div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me ? 'ml-auto bg-saffron-500 text-white' : 'bg-brown-50'}`}>{m.t}</div>)}
+          <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm" aria-live="polite">
+            {msgs.map((m, i) => <div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me ? 'ml-auto bg-saffron-500 text-white' : 'bg-brown-50'}`}>{m.t}{m.listing && <Link href={`/t/${m.listing.slug}`} className="mt-1 block text-xs font-semibold text-saffron-700">Open {m.listing.name_en}</Link>}{m.handoff && <Link href="/support" className="mt-1 block text-xs font-semibold text-saffron-700">Raise a support ticket</Link>}</div>)}
+            {busy && <div className="w-fit rounded-2xl bg-brown-50 px-3 py-2 text-brown-500">…</div>}
             <div className="flex flex-wrap gap-1 pt-1">
-              {['Temple timings', 'Ganapathi Homam price', 'Cancel a booking'].map(s =>
-                <button key={s} onClick={() => ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-xs hover:bg-brown-50">{s}</button>)}
+              {suggestions.slice(0, 4).map(s => <button key={s} onClick={() => ask(s)} className="rounded-full border border-brown-200 px-2.5 py-1 text-left text-xs hover:bg-brown-50">{s}</button>)}
             </div>
           </div>
           <form onSubmit={e => { e.preventDefault(); ask() }} className="flex gap-2 border-t border-brown-100 p-2">
-            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Ask anything…" className="input !py-2"/>
-            <button className="btn-p !px-3"><Send size={16}/></button>
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder={language === 'ml' ? 'ചോദിക്കൂ…' : 'Ask about a temple, pooja or booking…'} aria-label="Message" maxLength={500} className="input !py-2"/>
+            <button className="btn-p !px-3" disabled={busy} aria-label="Send"><Send size={16}/></button>
           </form>
         </div>
       )}

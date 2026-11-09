@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SWalletCredit } from '@/components/pages/partners'
-export const metadata = { title: 'Wallet Credit' }
-export default function Page(props) { return <Suspense fallback={null}><SWalletCredit {...props}/></Suspense> }
+import { StaffWalletCredit } from '@/components/phase1/StaffModeration'
+export const metadata = { title: 'Manual wallet points' }
+export default function Page() { return <Suspense fallback={null}><StaffWalletCredit/></Suspense> }

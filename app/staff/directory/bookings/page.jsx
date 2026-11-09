@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { StaffBookingsDirectory } from '@/components/pages/staffDirectory'
-export default function Page(props) { return <Suspense fallback={null}><StaffBookingsDirectory {...props}/></Suspense> }
+import StaffDirectory from '@/components/phase1/StaffDirectory'
+export default function Page() { return <Suspense fallback={null}><StaffDirectory kind="bookings"/></Suspense> }

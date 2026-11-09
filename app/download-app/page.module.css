@@ -1,0 +1,48 @@
+.page {
+  color: #35261c;
+  background: radial-gradient(ellipse at 100% 0, #fbe3d0 0, transparent 45%), radial-gradient(ellipse at 0 100%, #f5edd6 0, transparent 45%), #faf7f1;
+  padding: clamp(3rem, 7vw, 6rem) 1.25rem;
+}
+.layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 6rem); max-width: 1240px; margin: 0 auto; align-items: center; }
+.badge { display: inline-flex; align-items: center; gap: .6rem; padding: .6rem 1.1rem; border: 1px solid #ffccab; border-radius: 999px; background: #ffede0; color: #e56416; font-size: .95rem; font-weight: 700; }
+.intro h1 { margin-top: 1.5rem; max-width: 760px; font-family: inherit; font-size: clamp(2.6rem, 4.5vw, 4.5rem); font-weight: 800; line-height: 1.08; letter-spacing: -.045em; }
+.intro h1 span { color: #f47420; }
+.lead { margin-top: 1.5rem; font-size: clamp(1.05rem, 1.5vw, 1.3rem); line-height: 1.65; color: #866951; }
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2.5rem; }
+.features article { padding: 1.25rem; border: 1px solid #eae1d6; border-radius: 20px; background: #ffffffdb; box-shadow: 0 4px 12px #38251b06; }
+.features svg { color: #f47420; }
+.features h2 { font-family: inherit; font-size: 1.05rem; font-weight: 700; margin-top: 1rem; }
+.features p { margin-top: .4rem; color: #866951; font-size: .95rem; line-height: 1.65; }
+.card { padding: .9rem; border-radius: 36px; background: #fff; box-shadow: 0 16px 32px #35261c0c; }
+.cardHero { isolation: isolate; position: relative; display: flex; overflow: hidden; flex-direction: column; align-items: center; justify-content: center; min-height: 240px; padding: 2rem 1rem; border-radius: 27px; text-align: center; color: #fff; background: radial-gradient(ellipse at 50% 100%, #bb7845 0, #724928 50%, #35261c 100%); }
+.arch { position: absolute; z-index: -1; inset: 18px 18% -60px; border: 10px double #edc78855; border-radius: 100px 100px 0 0; box-shadow: 0 0 0 24px #c5966533, 0 0 0 42px #f6d1a114; }
+.appIcon { display: grid; place-items: center; width: 78px; height: 78px; border-radius: 21px; background: #fff; box-shadow: 0 8px 22px #20120838; }
+.cardHero p { font-size: .85rem; font-weight: 700; letter-spacing: .2em; color: #f3d6bb; margin-top: 1.4rem; }
+.cardHero h2 { font-family: inherit; font-size: clamp(1.3rem, 2.3vw, 1.8rem); font-weight: 800; margin-top: .6rem; line-height: 1.25; }
+.options { display: grid; gap: 1rem; padding: 1rem .5rem 1.3rem; }
+.downloadOption { display: flex; align-items: center; width: 100%; gap: 1rem; border: 1px solid transparent; padding: 1.2rem; border-radius: 21px; text-align: left; transition: background .15s; }
+.downloadOption:focus-visible { outline: 3px solid #d6b25c; outline-offset: 4px; }
+.downloadOption small { display: block; font-size: .75rem; font-weight: 600; }
+.downloadOption strong { display: block; font-size: 1rem; font-weight: 800; margin-top: .3rem; }
+.android { background: #e96500; color: #fff; }
+.android:hover { background: #cb5700; }
+.ios { background: #f5f1ed; border-color: #e8dfd5; color: #735744; }
+.ios:hover { background: #ebe2d9; }
+.downloadOption:disabled { color: #957c69; background: #f3f0ed; border-color: #e8dfd5; cursor: not-allowed; }
+.downloadOption:disabled .downloadIcon { display: none; }
+.platformIcon { display: grid; flex-shrink: 0; place-items: center; width: 46px; height: 48px; border-radius: 14px; background: #ffffff18; }
+.downloadIcon { margin-left: auto; flex-shrink: 0; }
+.comingSoon { display: block; font-size: .75rem; margin-top: .35rem; }
+.availability, .caption { color: #94745e; font-size: .85rem; line-height: 1.65; text-align: center; }
+.availability { padding: 0 .4rem; }
+.caption { margin-top: 1.3rem; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; max-width: 620px; gap: 2.5rem; }
+  .intro h1 { font-size: clamp(2.6rem, 8vw, 3.8rem); }
+}
+@media (max-width: 420px) {
+  .features { grid-template-columns: 1fr; }
+  .card { padding: .6rem; border-radius: 27px; }
+  .downloadOption { gap: .6rem; padding: 1rem .7rem; }
+  .downloadOption strong { font-size: .95rem; }
+}

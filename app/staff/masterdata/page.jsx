@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SMasterData } from '@/components/pages/partners'
-export const metadata = { title: 'Master Data' }
-export default function Page(props) { return <Suspense fallback={null}><SMasterData {...props}/></Suspense> }
+import { MasterData } from '@/components/phase1/StaffAdmin'
+export const metadata = { title: 'Master data' }
+export default function Page() { return <Suspense fallback={null}><MasterData/></Suspense> }

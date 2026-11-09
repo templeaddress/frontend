@@ -1,37 +1,20 @@
-/**
- * /service/[id] — statically generated service professional profile
- * Next.js 16: params is a Promise.
- */
-import { notFound } from 'next/navigation'
-import { services } from '@/lib/data'
-import { ServiceDetail } from '@/components/pages/public'
+import { CataloguePage, catalogueMetadata } from '@/components/phase1/CataloguePage'
+import { staticParams } from '@/lib/catalogue'
 
-export async function generateStaticParams() {
-  return services.map(s => ({ id: s.id }))
+// Pre-rendered at build and refreshed every five minutes; new pages render on first visit.
+export const revalidate = 300
+export const dynamicParams = true
+
+export function generateStaticParams() {
+  return staticParams('listings?type=service', row => ({ id: row.slug }))
 }
+
 export async function generateMetadata({ params }) {
   const { id } = await params
-  const svc = services.find(s => s.id === id)
-  if (!svc) return { title: 'Service not found' }
-
-  const title = `${svc.name} — ${svc.type}`
-  const description = `${svc.name}, ${svc.type} in ${svc.place}, ${svc.district}. ${svc.exp} years experience. Book appointments on TempleAddress.`
-  return {
-    title,
-    description,
-    alternates: { canonical: `https://templeaddress.com/service/${id}` },
-    openGraph: {
-      title: `${title} | TempleAddress`,
-      description,
-      url:   `https://templeaddress.com/service/${id}`,
-      type:  'profile',
-      locale: 'en_IN',
-    },
-  }
+  return catalogueMetadata('listings', id, 'service')
 }
-export default async function ServicePageRoute({ params }) {
+
+export default async function Page({ params }) {
   const { id } = await params
-  const svc = services.find(s => s.id === id)
-  if (!svc) notFound()
-  return <ServiceDetail />
+  return <CataloguePage kind="listings" reference={id} type="service"/>
 }

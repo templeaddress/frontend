@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { UserListings } from '@/components/pages/account'
+import { MyListings } from '@/components/phase1/Account'
 export const metadata = { title: 'My Listings' }
-export default function Page(props) { return <Suspense fallback={null}><UserListings {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><MyListings/></Suspense> }

@@ -1,37 +1,20 @@
-/**
- * /festival/[code] — statically generated festival page
- * Next.js 16: params is a Promise.
- */
-import { notFound } from 'next/navigation'
-import { festivals } from '@/lib/data'
-import { Festival } from '@/components/pages/public'
+import { CataloguePage, catalogueMetadata } from '@/components/phase1/CataloguePage'
+import { staticParams } from '@/lib/catalogue'
 
-export async function generateStaticParams() {
-  return festivals.map(f => ({ code: f.code }))
+// Pre-rendered at build and refreshed every five minutes; new pages render on first visit.
+export const revalidate = 300
+export const dynamicParams = true
+
+export function generateStaticParams() {
+  return staticParams('listings?type=festival', row => ({ code: row.slug }))
 }
+
 export async function generateMetadata({ params }) {
   const { code } = await params
-  const festival = festivals.find(f => f.code === code)
-  if (!festival) return { title: 'Festival not found' }
-
-  const title = festival.name
-  const description = `${festival.name} — ${festival.place ?? ''}, Kerala. Festival schedule, offerings, sponsors and visitor information on TempleAddress.`
-  return {
-    title,
-    description,
-    alternates: { canonical: `https://templeaddress.com/festival/${code}` },
-    openGraph: {
-      title: `${title} — TempleAddress`,
-      description,
-      url:   `https://templeaddress.com/festival/${code}`,
-      type:  'website',
-      locale: 'en_IN',
-    },
-  }
+  return catalogueMetadata('listings', code, 'festival')
 }
-export default async function FestivalPageRoute({ params }) {
+
+export default async function Page({ params }) {
   const { code } = await params
-  const festival = festivals.find(f => f.code === code)
-  if (!festival) notFound()
-  return <Festival />
+  return <CataloguePage kind="listings" reference={code} type="festival"/>
 }

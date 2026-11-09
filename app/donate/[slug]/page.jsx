@@ -1,16 +1,5 @@
 import { Suspense } from 'react'
-import { notFound } from 'next/navigation'
-import { temples } from '@/lib/data'
-import { Donate } from '@/components/pages/public'
+import { Phase1Checkout } from '@/components/phase1/Booking'
 
-export function generateStaticParams() { return temples.map(({ slug }) => ({ slug })) }
-export async function generateMetadata({ params }) {
-  const { slug } = await params
-  const temple = temples.find(item => item.slug === slug)
-  return { title: temple ? `Donate to ${temple.name}` : 'Temple not found', description: temple ? `Make a secure donation to ${temple.name}.` : undefined, robots: { index: false, follow: false } }
-}
-export default async function Page({ params }) {
-  const { slug } = await params
-  if (!temples.some(item => item.slug === slug)) notFound()
-  return <Suspense fallback={null}><Donate /></Suspense>
-}
+export const metadata = { title: 'Make a donation', description: 'Donate securely to an approved listing.', robots: { index: false, follow: false } }
+export default function Page() { return <Suspense fallback={null}><Phase1Checkout mode="donation"/></Suspense> }

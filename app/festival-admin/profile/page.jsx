@@ -1,3 +1,3 @@
 import { Suspense } from 'react'
-import { FPage } from '@/components/pages/vendorFestival'
-export default function Page(props) { return <Suspense fallback={null}><FPage {...props}/></Suspense> }
+import { VendorEditor } from '@/components/phase1/Vendor'
+export default function Page() { return <Suspense fallback={null}><VendorEditor/></Suspense> }

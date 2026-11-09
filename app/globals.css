@@ -160,3 +160,12 @@
   .booking-summary-action { min-height: 44px; padding: 0 .9rem; font-size: .9rem }
   .booking-modal-item { align-items: flex-start; flex-direction: column }
 }
+
+/* Landing hero: slow cross-fade with a gentle zoom */
+@keyframes heroFade { 0% { opacity: 0 } 6% { opacity: 1 } 25% { opacity: 1 } 31% { opacity: 0 } 100% { opacity: 0 } }
+@keyframes kenBurns { from { transform: scale(1.04) } to { transform: scale(1.14) } }
+.hero-slide { opacity: 0; animation-name: heroFade, kenBurns; animation-timing-function: ease-in-out, linear; animation-iteration-count: infinite, infinite; animation-direction: normal, alternate }
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { animation: none; opacity: 0 }
+  .hero-slide:first-child { opacity: 1 }
+}

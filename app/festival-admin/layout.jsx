@@ -1,6 +1,8 @@
+import { VendorArea } from '@/components/phase1/Vendor'
+
 export const metadata = {
-  title: { default: 'Festival Dashboard', template: '%s | Festival Dashboard' },
+  title: { default: 'Festival dashboard', template: '%s | Festival dashboard' },
   robots: { index: false, follow: false, nocache: true },
 }
 
-export default function Layout({ children }) { return children }
+export default function Layout({ children }) { return <VendorArea>{children}</VendorArea> }

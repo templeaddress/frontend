@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { STables } from '@/components/pages/partners'
+import { Tables } from '@/components/phase1/StaffAdmin'
 export const metadata = { title: 'Tables' }
-export default function Page(props) { return <Suspense fallback={null}><STables {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><Tables/></Suspense> }

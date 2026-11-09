@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { Login } from '@/components/pages/public'
+import Phase1Login from '@/components/phase1/Auth'
 export const metadata = { title: 'Login', robots: { index: false, follow: false } }
-export default function Page(props) { return <Suspense fallback={null}><Login {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><Phase1Login/></Suspense> }

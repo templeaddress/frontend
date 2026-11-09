@@ -1,26 +1,32 @@
-import { Fraunces, Manrope, Anek_Malayalam } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
+import DemoPortalGate from '@/components/DemoPortalGate'
+import { isProductionSite } from '@/lib/site-env'
 
-/* ── Google Fonts via next/font (zero layout shift, self-hosted at build time) ── */
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  // variable weight enables optical-size axis (opsz) and lets CSS pick 500/600/700
-  weight: 'variable',
+/* Bundled fonts keep builds independent of Google Fonts response formats. */
+const fraunces = localFont({
+  src: './fonts/fraunces-variable.woff2',
+  weight: '100 900',
+  style: 'normal',
   variable: '--font-fraunces',
   display: 'swap',
-  axes: ['opsz'],
+  adjustFontFallback: 'Times New Roman',
 })
-const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+const manrope = localFont({
+  src: './fonts/manrope-variable.woff2',
+  weight: '200 800',
+  style: 'normal',
   variable: '--font-manrope',
   display: 'swap',
+  adjustFontFallback: 'Arial',
 })
-const anekMalayalam = Anek_Malayalam({
-  subsets: ['malayalam', 'latin'],
-  weight: ['400', '600', '700'],
+const anekMalayalam = localFont({
+  src: './fonts/anek-malayalam-variable.woff2',
+  weight: '100 800',
+  style: 'normal',
   variable: '--font-anek',
   display: 'swap',
+  adjustFontFallback: 'Arial',
 })
 
 /* ── Site-wide default metadata (pages override with their own generateMetadata) ── */
@@ -44,7 +50,7 @@ export const metadata = {
   },
   twitter: { card: 'summary_large_image', site: '@templeaddress' },
   alternates: { canonical: 'https://templeaddress.com' },
-  robots: { index: true, follow: true },
+  robots: isProductionSite() ? { index: true, follow: true } : { index: false, follow: false, nocache: true },
   category: 'travel',
 }
 
@@ -56,7 +62,7 @@ export default function RootLayout({ children }) {
       className={`${fraunces.variable} ${manrope.variable} ${anekMalayalam.variable}`}
     >
       <body className="bg-brown-50 text-brown-900 antialiased">
-        {children}
+        <DemoPortalGate>{children}</DemoPortalGate>
       </body>
     </html>
   )

@@ -16,7 +16,7 @@ const config = {
         wa:'#25D366',
       },
       fontFamily: {
-        // Use CSS variables set by next/font/google in layout.jsx
+        // Use CSS variables set by next/font/local in layout.jsx
         sans:    ['var(--font-manrope)','Anek Malayalam','system-ui','sans-serif'],
         display: ['var(--font-fraunces)','Anek Malayalam','serif'],
         anek:    ['var(--font-anek)','Manrope','sans-serif'],

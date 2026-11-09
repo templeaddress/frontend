@@ -1,4 +1,4 @@
 import { Suspense } from 'react'
-import { SCharts } from '@/components/pages/partners'
+import { StaffCharts } from '@/components/phase1/Staff'
 export const metadata = { title: 'Daily Charts' }
-export default function Page(props) { return <Suspense fallback={null}><SCharts {...props}/></Suspense> }
+export default function Page() { return <Suspense fallback={null}><StaffCharts/></Suspense> }
