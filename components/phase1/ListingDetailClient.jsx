@@ -2,11 +2,11 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import {
-  BadgeCheck, BarChart3, CalendarDays, Clock3, ExternalLink, Gift, Landmark,
-  Mail, MapPin, MessageCircle, Phone, Share2, ShieldCheck, Sparkles, UserRound,
+  BadgeCheck, BarChart3, CalendarDays, ChevronLeft, ChevronRight, Clock3, ExternalLink, Gift, Landmark,
+  Mail, MapPin, MessageCircle, Phone, Share2, ShieldCheck, Sparkles, UserRound, X,
 } from 'lucide-react'
 
 import { clientApi, readAuth } from '@/lib/client-api'
@@ -28,6 +28,41 @@ function Fact({ label, value }) {
 
 function Metric({ label, value }) {
   return <div className="rounded-xl bg-brown-50 p-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-brown-500">{label}</p><p className="mt-1 text-xl font-bold">{value ?? 0}</p></div>
+}
+
+function Gallery({ images, listingName }) {
+  const dialogRef = useRef(null)
+  const [activeIndex, setActiveIndex] = useState(null)
+  const isOpen = activeIndex !== null
+
+  useEffect(() => {
+    if (!isOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [isOpen])
+
+  function open(index) {
+    setActiveIndex(index)
+    dialogRef.current?.showModal()
+  }
+
+  function move(offset) {
+    setActiveIndex(index => (index + offset + images.length) % images.length)
+  }
+
+  return <section className="card p-5"><h3 className="font-semibold">Gallery</h3>{images.length ? <>
+    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{images.map((image, index) => <button type="button" key={image.uuid} onClick={() => open(index)} aria-label={`Preview ${image.caption || `${listingName} photo ${index + 1}`}`} className={`relative overflow-hidden rounded-xl bg-brown-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-600 ${index === 0 ? 'col-span-2 row-span-2 aspect-square' : 'aspect-square'}`}><Image src={image.url} alt={image.caption || `${listingName} photo ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition duration-300 hover:scale-105"/></button>)}</div>
+    <dialog ref={dialogRef} aria-label={`${listingName} gallery preview`} onClose={() => setActiveIndex(null)} onClick={event => { if (event.target === event.currentTarget) event.currentTarget.close() }} onKeyDown={event => { if (images.length > 1 && event.key === 'ArrowRight') { event.preventDefault(); move(1) } if (images.length > 1 && event.key === 'ArrowLeft') { event.preventDefault(); move(-1) } }} className="fixed inset-0 m-0 h-[100dvh] max-h-none w-screen max-w-none bg-black/95 p-0 text-white backdrop:bg-black/95">
+      {activeIndex !== null && <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6"><p aria-live="polite" className="text-sm">{activeIndex + 1} / {images.length}</p><button type="button" autoFocus onClick={() => dialogRef.current?.close()} aria-label="Close image preview" className="grid h-11 w-11 place-items-center rounded-full bg-white/15 hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"><X size={24}/></button></div>
+        <div className="relative min-h-0 flex-1"><Image src={images[activeIndex].url} alt={images[activeIndex].caption || `${listingName} photo ${activeIndex + 1}`} fill sizes="100vw" className="object-contain"/>
+          {images.length > 1 && <><button type="button" onClick={() => move(-1)} aria-label="Previous image" className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/60 hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:left-5"><ChevronLeft size={28}/></button><button type="button" onClick={() => move(1)} aria-label="Next image" className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/60 hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:right-5"><ChevronRight size={28}/></button></>}
+        </div>
+        <p className="min-h-[3rem] px-4 py-3 text-center text-sm text-white/90">{images[activeIndex].caption || '\u00a0'}</p>
+      </div>}
+    </dialog>
+  </> : <p className="mt-2 text-sm text-brown-500">Verified gallery images have not been published.</p>}</section>
 }
 
 function ContactPanel({ listing }) {
@@ -146,7 +181,7 @@ export default function ListingDetailClient({ listing }) {
           <section className="card p-5"><h2 className="font-semibold">Basic details</h2><dl className="mt-4 grid gap-5 sm:grid-cols-2"><Fact label="Name (English)" value={listing.name_en}/><Fact label="Name (Malayalam)" value={listing.name_ml}/><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Category" value={listing.category?.name_en}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="District" value={listing.district?.name_en}/><Fact label="Opening hours" value={openingText(periods)}/><Fact label="Pincode" value={listing.pincode}/></dl></section>
           {(listing.speciality || listing.guidelines) && <section className="grid gap-4 sm:grid-cols-2">{listing.speciality && <div className="card p-5"><h3 className="font-semibold">Speciality</h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.speciality}</p></div>}{listing.guidelines && <div className="card p-5"><h3 className="font-semibold">Visitor guidelines</h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.guidelines}</p></div>}</section>}
           <section className={`grid gap-6 ${demoPortals ? 'sm:grid-cols-2' : ''}`}><div className="card p-5"><h3 className="font-semibold">Deities</h3><div className="mt-3 flex flex-wrap gap-2">{(listing.deities || []).map(deity => <span key={deity.code} className={`pill ${deity.is_primary ? 'bg-saffron-50 text-saffron-700' : 'bg-brown-100 text-brown-700'}`}>{deity.name_en}{deity.is_primary ? ' · main' : ''}</span>)}</div></div>{demoPortals && <div className="card p-5"><h3 className="font-semibold">Nearby places</h3>{listing.nearby_places?.length ? <ul className="mt-3 space-y-2 text-sm">{listing.nearby_places.map(place => <li key={place.name_en} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-600"/><span>{place.name_en}{place.distance_km ? ` · ${place.distance_km} km` : ''}</span></li>)}</ul> : <p className="mt-2 text-sm text-brown-500">Nearby places have not been published.</p>}</div>}</section>
-          <section className="card p-5"><h3 className="font-semibold">Gallery</h3>{gallery.length ? <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{gallery.map((image, index) => <figure key={image.uuid} className={`relative overflow-hidden rounded-xl bg-brown-100 ${index === 0 ? 'col-span-2 row-span-2 aspect-square' : 'aspect-square'}`}><Image src={image.url} alt={image.caption || `${listing.name_en} photo ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition duration-300 hover:scale-105"/></figure>)}</div> : <p className="mt-2 text-sm text-brown-500">Verified gallery images have not been published.</p>}</section>
+          <Gallery images={gallery} listingName={listing.name_en}/>
         </>}
 
         {tab === 1 && <section className="card space-y-6 p-5"><div><h2 className="text-xl font-semibold">Story and significance</h2><p className="mt-2 leading-7 text-brown-700">{listing.description_en || 'No story has been published.'}</p></div><div><h3 className="font-semibold">History</h3><p className="mt-2 leading-7 text-brown-700">{listing.history || 'No verified history has been published.'}</p></div><div><h3 className="font-semibold">Remarks</h3><p className="mt-2 leading-7 text-brown-700">{listing.remarks || 'No additional remarks.'}</p></div>{profile.management && <p className="flex items-center gap-2 rounded-xl bg-brown-50 p-3 text-sm"><Landmark size={16}/>Managed by <b>{profile.management}</b></p>}{profile.chief_priest && <p className="flex items-center gap-2 rounded-xl bg-brown-50 p-3 text-sm"><UserRound size={16}/>Chief priest <b>{profile.chief_priest}</b></p>}</section>}
