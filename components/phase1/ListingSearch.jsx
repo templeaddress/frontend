@@ -6,7 +6,7 @@ import { Search } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { directoryHref, EMPTY_FILTERS } from '@/lib/listing-directory'
 
-export function ListingSearchInput({ value, onChange, onSelect, type = 'temple', placeholder = 'Name, code, deity or place', label = 'Search listings' }) {
+export function ListingSearchInput({ value, onChange, onSelect, type = 'temple', suggestions = true, placeholder = 'Name, code, deity or place', label = 'Search listings' }) {
   const id = useId()
   const [matches, setMatches] = useState({ query: '', rows: [] })
   const [open, setOpen] = useState(false)
@@ -18,12 +18,15 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
   const expanded = open && rows.length > 0
 
   useEffect(() => {
-    if (term.length < 2) return
+    if (!suggestions || term.length < 2) return
     const controller = new AbortController()
     const timer = window.setTimeout(async () => {
       try {
-        const params = new URLSearchParams({ q: term, type })
-        const data = await apiFetch(`listings/suggestions?${params}`, { signal: controller.signal })
+        const types = type === 'all' ? ['temple', 'festival', 'service'] : [type]
+        const data = (await Promise.all(types.map(async listingType => {
+          const params = new URLSearchParams({ q: term, type: listingType })
+          return apiFetch(`listings/suggestions?${params}`, { signal: controller.signal })
+        }))).flat()
         if (controller.signal.aborted) return
         setMatches({ query: term, rows: data }); setActive(-1)
         setOpen(focused.current && !dismissed.current)
@@ -32,7 +35,7 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
       }
     }, 300)
     return () => { window.clearTimeout(timer); controller.abort() }
-  }, [term, type])
+  }, [term, type, suggestions])
 
   function choose(row) {
     dismissed.current = true
@@ -61,7 +64,7 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
         className={`block w-full px-4 py-3 text-left text-sm hover:bg-brown-50 ${active === index ? 'bg-brown-50' : ''}`}
         onMouseDown={event => event.preventDefault()} onClick={() => choose(row)}>
         <span className="block font-semibold">{row.name_en}</span>
-        <span className="block truncate text-xs text-brown-500">{[row.address || row['district__name_en'], row.code].filter(Boolean).join(', ')}</span>
+        <span className="block truncate text-xs text-brown-500">{[row.address || row['district__name_en'], row.code, type === 'all' ? ({ temple: 'Temple', festival: 'Festival', service: 'Service' }[row.listing_type]) : ''].filter(Boolean).join(', ')}</span>
       </button>)}
     </span>}
   </span>

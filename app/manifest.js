@@ -7,6 +7,6 @@ export default function manifest() {
     display: 'standalone',
     background_color: '#fbf5ea',
     theme_color: '#2e2019',
-    icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+    icons: [{ src: '/templeaddress-pin.png', type: 'image/png' }],
   }
 }
