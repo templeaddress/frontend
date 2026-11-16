@@ -18,8 +18,11 @@ import { AppointmentPanel, ClaimPanel, SponsorPanel } from './ListingPhase2'
 const tabs = ['Basic Info', 'Details', 'Contact', 'Donations', 'Poojas']
 
 function openingText(periods = []) {
-  if (!periods.length) return 'Timings not published'
-  return periods.map(period => `${period.label}: ${period.opens}–${period.closes}`).join(' · ')
+  const entries = periods.flatMap(period => {
+    const time = period?.time || [period?.opens, period?.closes].filter(Boolean).join('\u2013')
+    return time ? [`${period.label}: ${time}`] : []
+  })
+  return entries.join(' \u00b7 ') || 'Timings not published'
 }
 
 function Fact({ label, value }) {
