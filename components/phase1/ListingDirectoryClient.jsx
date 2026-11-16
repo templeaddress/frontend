@@ -61,7 +61,7 @@ export default function ListingDirectoryClient({ initialPage, initialFilters = E
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-brown-100 pt-4">
         {type === 'temple' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={bookable} onChange={event => updateFilter('bookable', event.target.checked)}/>Pooja booking open</label>}
-        <label className="ml-auto flex items-center gap-2 text-sm"><span className="text-brown-500">Sort</span><select className="input !w-auto !py-2" value={sort} onChange={event => updateFilter('sort', event.target.value)}><option value="relevance">Relevance</option><option value="name_asc">Name A–Z</option><option value="name_desc">Name Z–A</option></select></label>
+        <label className="ml-auto flex items-center gap-2 text-sm"><span className="text-brown-500">Sort</span><select className="input !w-auto !py-2" value={sort} onChange={event => updateFilter('sort', event.target.value)}><option value="relevance">{type === 'temple' ? 'Pooja booking first' : 'Relevance'}</option><option value="name_asc">Name A–Z</option><option value="name_desc">Name Z–A</option></select></label>
         <button type="button" className="btn-g !py-2" onClick={reset}>Reset</button>
       </div>
     </section>
@@ -79,7 +79,7 @@ function ListingResults({ queryKey, initialPage, startPage, filters, type, filte
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy={loading}>{results.map(item => <Link key={item.uuid} href={listingPath(item)} className="card-premium group overflow-hidden">
       <div className="relative aspect-[16/10] bg-brown-100">
         {item.cover ? <Image src={item.cover} alt={item.name_en} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-300 group-hover:scale-105"/> : <span className="grid h-full place-items-center text-saffron-700"><Landmark size={38}/></span>}
-        <span className="pill absolute right-3 top-3 bg-white/95 text-emerald-700 shadow-sm"><ShieldCheck size={12}/>Verified</span>
+        <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1 pl-20"><span className="pill bg-white/95 text-emerald-700 shadow-sm"><ShieldCheck size={12}/>Verified</span>{item.listing_type === 'temple' && item.booking_enabled && item.has_poojas && <span className="pill bg-white/95 text-emerald-700 shadow-sm">Booking Available</span>}</div>
         <span className="pill absolute left-3 top-3 bg-brown-900/85 text-white">{item.code}</span>
       </div>
       <div className="p-5">
