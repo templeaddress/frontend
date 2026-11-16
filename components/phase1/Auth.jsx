@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PublicShell, Field, Input, TempleMark } from '@/components/ui'
-import { canLinkMobile, clientApi, readAuth, safeNextPath, saveAuth } from '@/lib/client-api'
+import { canLinkMobile, clientApi, loginErrorMessage, readAuth, safeNextPath, saveAuth } from '@/lib/client-api'
 import OtpInput from './OtpInput'
 import styles from './Template.module.css'
 import { cleanMobile, mobileError, mobileLimits, validMobile } from '@/lib/auth-phone'
@@ -169,7 +169,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
         if (channel) setNotice(`OTP sent via ${channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}.`)
       }
     } catch (err) {
-      setError(err.message)
+      setError(loginErrorMessage(err))
       if (recaptchaWidget.current !== null) window.grecaptcha?.reset(recaptchaWidget.current)
       setRecaptchaToken('')
     } finally { setBusy(false) }
