@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Check, RotateCcw, X } from 'lucide-react'
-import { clientApi } from '@/lib/client-api'
+import { clientApi, loginErrorMessage } from '@/lib/client-api'
+import ListingRevisionEditor from './ListingRevisionEditor'
 import StaffShell from './StaffShell'
 import StaffListingPreview from './StaffListingPreview'
 import StaffListingTools from './StaffListingTools'
@@ -19,8 +20,22 @@ export function SubmittedFields({ value }) {
 
 export default function StaffReviewDetail() {
   const { revision } = useParams(), params = useSearchParams()
+  const router = useRouter()
   const { data: row, error, loading, reload } = useStaffQuery(`staff/listing-revisions/${revision}`)
   const [tab, setTab] = useState(params.get('view') === 'preview' ? 'preview' : 'details'), [decision, setDecision] = useState(''), [busy, setBusy] = useState(false), [actionError, setActionError] = useState(''), [notice, setNotice] = useState('')
+  async function prepareOrSubmit() {
+    if (busy) return
+    setBusy(true); setActionError('')
+    try {
+      if (row.status === 'legacy') {
+        const result = await clientApi(`staff/listing-revisions/${revision}/prepare`, { method: 'POST' })
+        router.replace(`/staff/reviews/${result.revision_uuid}`)
+      } else {
+        await clientApi(`me/listings/${row.listing_uuid}/submit`, { method: 'POST' })
+        setNotice('Submitted for review.'); reload()
+      }
+    } catch (err) { setActionError(loginErrorMessage(err)) } finally { setBusy(false) }
+  }
   async function submit(event) {
     event.preventDefault()
     if (busy) return
@@ -32,6 +47,7 @@ export default function StaffReviewDetail() {
     {loading && !row && <p role="status">Loading submission…</p>}{row && <><div className="mb-5 rounded-2xl border border-brown-100 bg-white p-5"><StaffDetails values={[["Created", staffDate(row.created_at)], ['Updated', staffDate(row.updated_at)], ['Submitted', staffDate(row.submitted_at)], ['Review status', <StaffStatus key="status" value={row.status}/>]]}/>{row.review_notes && <p className="mt-4 border-t border-brown-100 pt-4 text-sm"><b>Review feedback:</b> {row.review_notes}</p>}</div><div className="mb-5 flex flex-wrap gap-2">{[['details', 'Submitted details'], ['preview', 'Public-page preview'], ['documents', 'Documents & access']].map(([key, label]) => <button type="button" className={tab === key ? 'btn-p !py-2 text-sm' : 'btn-g !py-2 text-sm'} aria-pressed={tab === key} key={key} onClick={() => setTab(key)}>{label}</button>)}</div>
       {tab === 'details' && <div className="rounded-2xl border border-brown-100 bg-white p-5 sm:p-6"><SubmittedFields value={row.snapshot}/></div>}{tab === 'preview' && <><p className="mb-4 text-sm text-brown-500">Preview of this submission. Bookings are unavailable in this preview.</p><StaffListingPreview key={revision} row={row}/></>}{tab === 'documents' && <div className="rounded-2xl border border-brown-100 bg-white p-5"><StaffListingTools listing={{ uuid: row.listing_uuid, listing_type: row.listing_type, publication_status: row.publication_status }} hideVisibility/></div>}
       {row.status === 'submitted' && <div className="sticky bottom-3 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brown-100 bg-white/95 p-4 shadow-lg backdrop-blur"><p className="text-sm text-brown-500">Review all submitted details before deciding.</p><div className="flex flex-wrap gap-2"><button className="btn-g !py-2" onClick={() => { setActionError(''); setDecision('request-changes') }}><RotateCcw size={15}/>Request changes</button><button className="btn-g !py-2 text-red-700" onClick={() => { setActionError(''); setDecision('reject') }}><X size={15}/>Reject</button><button className="btn-p !py-2" onClick={() => { setActionError(''); setDecision('approve') }}><Check size={15}/>Approve listing</button></div></div>}</>}
+    <StaffNotice error={actionError}/>{row?.status === 'legacy' && <div className="card mt-5 p-5"><p className="mb-3">{row.publication_history ? 'This listing has previous approval history. Inspect its approved revision before changing its publication status.' : 'Prepare a draft, check the imported details, then submit for approval. Ambiguous opening times must be corrected in Details before other sections can be saved.'}</p><button className="btn-p" disabled={busy || row.publication_history} onClick={prepareOrSubmit}>Prepare review draft</button></div>}{row?.can_edit && <div className="mt-5 space-y-4"><ListingRevisionEditor key={row.uuid} listing={{ uuid: row.listing_uuid, listing_type: row.listing_type }} revision={row} onChange={reload}/><button className="btn-p" disabled={busy} onClick={prepareOrSubmit}>Submit for review</button></div>}
     {decision && <StaffModal title={decision === 'approve' ? 'Approve and publish listing' : decision === 'reject' ? 'Reject submission' : 'Request changes'} onClose={() => { if (!busy) setDecision('') }}><form onSubmit={submit} className="space-y-4"><p className="text-sm text-brown-500">{row?.name_en} · {row?.code}{decision === 'approve' ? ' will become publicly available.' : ' — explain what the creator needs to change.'}</p><label className="block text-sm font-medium">{decision === 'approve' ? 'Review note (optional)' : 'Reason / feedback'}<textarea className="input mt-2" name="reason" rows={4} required={decision !== 'approve'} maxLength={2000}/></label><StaffNotice error={actionError}/><div className="flex justify-end gap-2"><button type="button" className="btn-g" disabled={busy} onClick={() => setDecision('')}>Cancel</button><button className="btn-p" disabled={busy}>{busy ? 'Saving…' : decision === 'approve' ? 'Approve and publish' : 'Save decision'}</button></div></form></StaffModal>}
   </StaffShell>
 }
