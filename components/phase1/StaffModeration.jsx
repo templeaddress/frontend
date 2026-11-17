@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Eye, FileDown, Wallet } from 'lucide-react'
 import { clientApi } from '@/lib/client-api'
 import StaffShell from './StaffShell'
+import StaffChartAlerts from './StaffChartAlerts'
 import { staffDownload, useStaffQuery } from './StaffData'
 import { StaffDetails, StaffEmpty, StaffModal, StaffNotice, StaffPageHeading, StaffPager, StaffSearch, StaffStatus, staffDate, titleCase } from './StaffUI'
 
@@ -39,6 +40,7 @@ export function StaffQueues() {
     ['Consolidated support tickets', 'Website · mobile app · WhatsApp chatbot', '/staff/support', data?.tickets_open],
   ]
   return <StaffShell><StaffPageHeading eyebrow={data ? new Date(data.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Moderation'} title="Moderator work queues" description="Content, identity and operations reviews." action={<span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Moderator scope only</span>}/><StaffNotice error={error}/>
+    <StaffChartAlerts/>
     <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[['listings pending', data?.listings_pending, data?.listings_oldest_days != null ? `oldest ${data.listings_oldest_days} days` : ''], ['KYC + partner requests', (data?.kyc_pending || 0) + (data?.partner_requests || 0)], ['charts prepared today', data?.charts_today], ['support tickets open', data?.tickets_open]].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-brown-100 bg-white p-5"><p className="text-3xl font-semibold">{n(value)}</p><p className="mt-1 text-sm text-brown-500">{label}</p>{note && <p className="mt-1 text-xs font-semibold text-emerald-700">{note}</p>}</div>)}</div>
     <div className="grid gap-4 lg:grid-cols-2">{cards.map(([title, text, href, count]) => <div key={title} className="flex items-center gap-4 rounded-2xl border border-brown-100 bg-white p-5"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-saffron-50 text-lg font-bold text-saffron-700">{n(count)}</span><div className="min-w-0 flex-1"><h2 className="font-semibold">{title}</h2><p className="text-sm text-brown-500">{text}</p></div><Link className="btn-g !py-2" href={href}>Open<ArrowRight size={14}/></Link></div>)}</div>
     <section className="mt-6 rounded-2xl border border-brown-100 bg-white p-5"><h2 className="mb-3 text-xl font-semibold">Today’s moderation activity</h2><Table head={['Review area', 'Completed (24h)', 'Pending', 'Oldest']}>{(data?.activity || []).map(row => <tr key={row.area}><td className="td">{row.area}</td><td className="td">{row.completed}</td><td className="td">{row.pending}</td><td className="td">{row.oldest_days == null ? '—' : `${row.oldest_days} days`}</td></tr>)}{loading && <StaffEmpty columns={4} loading/>}</Table></section>
