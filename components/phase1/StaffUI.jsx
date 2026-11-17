@@ -24,7 +24,33 @@ export function StaffSearch({ value, onChange, placeholder = 'Search records', l
   return <div className="relative min-w-[200px] flex-1"><Search size={16} className="pointer-events-none absolute left-3 top-3.5 text-brown-500"/><input aria-label={label} className="input !pl-10" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}/></div>
 }
 export function StaffPager({ payload, page, onChange, loading = false }) {
-  return <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm"><span className="text-brown-500">{payload ? `${payload.count.toLocaleString('en-IN')} record(s)` : loading ? 'Loading…' : '—'}</span><div className="flex items-center gap-3"><button type="button" className="btn-g !px-3 !py-2" disabled={loading || !payload?.previous} onClick={() => onChange(Number(page) - 1)}><ChevronLeft size={15}/>Previous</button><span>Page {page}</span><button type="button" className="btn-g !px-3 !py-2" disabled={loading || !payload?.next} onClick={() => onChange(Number(page) + 1)}>Next<ChevronRight size={15}/></button></div></div>
+  const currentPage = Number(page)
+  // A full page supplies the page size. Without a next link, this is the last page.
+  const totalPages = payload?.next && payload.results.length
+    ? Math.ceil(payload.count / payload.results.length)
+    : currentPage
+  const canJump = !loading && payload && totalPages > 1
+
+  function jumpToPage(event) {
+    event.preventDefault()
+    const target = Number(new FormData(event.currentTarget).get('page'))
+    if (canJump && Number.isInteger(target) && target >= 1 && target <= totalPages && target !== currentPage) {
+      onChange(target)
+    }
+  }
+
+  return <nav aria-label="Table pagination" className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+    <span className="text-brown-500">{payload ? `${payload.count.toLocaleString('en-IN')} record(s)` : loading ? 'Loading…' : '—'}</span>
+    <div className="flex flex-wrap items-center gap-3">
+      <button type="button" className="btn-g !px-3 !py-2" disabled={loading || !payload?.previous} onClick={() => onChange(currentPage - 1)}><ChevronLeft size={15}/>Previous</button>
+      <span className="whitespace-nowrap" aria-live="polite">Page {page}{payload && ` of ${totalPages}`}</span>
+      <button type="button" className="btn-g !px-3 !py-2" disabled={loading || !payload?.next} onClick={() => onChange(currentPage + 1)}>Next<ChevronRight size={15}/></button>
+      <form className="flex items-center gap-2" onSubmit={jumpToPage}>
+        <label className="flex items-center gap-2 whitespace-nowrap">Go to page<input key={page} name="page" type="number" min="1" max={totalPages} step="1" required defaultValue={currentPage} disabled={!canJump} className="input !w-20 !py-2"/></label>
+        <button type="submit" className="btn-g !px-3 !py-2" disabled={!canJump}>Go</button>
+      </form>
+    </div>
+  </nav>
 }
 export function StaffEmpty({ loading, text = 'No matching records.', columns = 1 }) {
   return <tr><td colSpan={columns} className="px-5 py-12 text-center text-sm text-brown-500" role="status">{loading ? 'Loading records…' : text}</td></tr>
