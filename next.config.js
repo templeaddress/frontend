@@ -44,6 +44,13 @@ const nextConfig = {
       { protocol: 'https', hostname: 'templeaddress-cloud.s3.amazonaws.com' },
       // Listing photos are also served from the bucket's regional endpoint.
       { protocol: 'https', hostname: 'templeaddress-cloud.s3.ap-south-1.amazonaws.com' },
+      // Approved mobile uploads are streamed from the API's private storage.
+      { protocol: 'https', hostname: 'api.templeaddress.com', pathname: '/api/v1/listings/media/**' },
+      ...[...new Set([process.env.NEXT_PUBLIC_API_URL, process.env.TEMPLEADDRESS_API_URL]
+        .map(origin).filter(Boolean))].map(value => {
+        const url = new URL(value)
+        return { protocol: url.protocol.slice(0, -1), hostname: url.hostname, port: url.port, pathname: '/api/v1/listings/media/**' }
+      }),
       // Seed/demo records may still carry these placeholders until approved media is uploaded.
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'fonts.googleapis.com' },
