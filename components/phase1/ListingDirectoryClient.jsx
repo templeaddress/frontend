@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Clock3, Landmark, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react'
-import { listingPath } from '@/lib/catalogue'
+import { listingPath, openingText } from '@/lib/catalogue'
 import { directoryApiQuery, directoryFilters, directoryHref, directoryPageNumber, EMPTY_FILTERS } from '@/lib/listing-directory'
 import { ListingSearchInput } from './ListingSearch'
 import { CatalogueLoadMore, useCataloguePages } from './useCataloguePages'
@@ -76,20 +76,23 @@ function ListingResults({ queryKey, initialPage, startPage, filters, type, filte
   return <>
     <div className="mb-4 flex items-end justify-between gap-3"><div><h2 className="text-xl font-semibold">Search results</h2><p className="text-sm text-brown-500">{count} {count === 1 ? 'listing' : 'listings'}{filters.query && <> for “{filters.query}”</>}</p></div></div>
     {!loading && !error && !results.length && <div className="card p-8 text-center"><Search size={28} className="mx-auto text-brown-300"/><h3 className="mt-3 font-semibold">No listings match these filters</h3><p className="mt-1 text-sm text-brown-500">Try another name, place or filter.</p>{filtered && <button type="button" onClick={reset} className="btn-g mt-4">Clear filters</button>}</div>}
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy={loading}>{results.map(item => <Link key={item.uuid} href={listingPath(item)} className="card-premium group overflow-hidden">
-      <div className="relative aspect-[16/10] bg-brown-100">
-        {item.cover ? <Image src={item.cover} alt={item.name_en} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-300 group-hover:scale-105"/> : <span className="grid h-full place-items-center text-saffron-700"><Landmark size={38}/></span>}
-        <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1 pl-20"><span className="pill bg-white/95 text-emerald-700 shadow-sm"><ShieldCheck size={12}/>Verified</span>{item.listing_type === 'temple' && item.booking_enabled && item.has_poojas && <span className="pill bg-white/95 text-emerald-700 shadow-sm">Booking Available</span>}</div>
-        <span className="pill absolute left-3 top-3 bg-brown-900/85 text-white">{item.code}</span>
-      </div>
-      <div className="p-5">
-        <h2 className="text-xl font-semibold">{item.name_en}</h2>{item.name_ml && <p className="ml text-sm text-brown-500">{item.name_ml}</p>}
-        {item.main_deity && <p className="mt-2 text-sm font-medium text-saffron-700">Main deity · {item.main_deity}</p>}
-        <p className="mt-3 flex items-start gap-2 text-sm text-brown-500"><MapPin size={15} className="mt-0.5 shrink-0"/>{item.address || 'Location available on detail page'}</p>
-        {!!item.opening_periods?.length && <p className="mt-2 flex items-start gap-2 text-xs text-brown-500"><Clock3 size={14} className="mt-0.5 shrink-0"/>{item.opening_periods.map(period => `${period.label}: ${period.opens}–${period.closes}`).join(' · ')}</p>}
-        <div className="mt-4 flex flex-wrap gap-2">{item.booking_enabled ? <span className="pill bg-saffron-50 text-saffron-700">Pooja booking</span> : <span className="pill bg-brown-100 text-brown-500">Profile only</span>}{item.donation_enabled && <span className="pill bg-blue-50 text-blue-700">Donations</span>}{item.listing_type === 'service' && <span className="pill bg-brown-100">Enquiry only</span>}</div>
-      </div>
-    </Link>)}</div>
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy={loading}>{results.map(item => {
+      const hours = openingText(item.opening_periods)
+      return <Link key={item.uuid} href={listingPath(item)} className="card-premium group overflow-hidden">
+        <div className="relative aspect-[16/10] bg-brown-100">
+          {item.cover ? <Image src={item.cover} alt={item.name_en} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-300 group-hover:scale-105"/> : <span className="grid h-full place-items-center text-saffron-700"><Landmark size={38}/></span>}
+          <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1 pl-20"><span className="pill bg-white/95 text-emerald-700 shadow-sm"><ShieldCheck size={12}/>Verified</span>{item.listing_type === 'temple' && item.booking_enabled && item.has_poojas && <span className="pill bg-white/95 text-emerald-700 shadow-sm">Booking Available</span>}</div>
+          <span className="pill absolute left-3 top-3 bg-brown-900/85 text-white">{item.code}</span>
+        </div>
+        <div className="p-5">
+          <h2 className="text-xl font-semibold">{item.name_en}</h2>{item.name_ml && <p className="ml text-sm text-brown-500">{item.name_ml}</p>}
+          {item.main_deity && <p className="mt-2 text-sm font-medium text-saffron-700">Main deity · {item.main_deity}</p>}
+          <p className="mt-3 flex items-start gap-2 text-sm text-brown-500"><MapPin size={15} className="mt-0.5 shrink-0"/>{item.address || 'Location available on detail page'}</p>
+          {hours && <p className="mt-2 flex items-start gap-2 text-xs text-brown-500"><Clock3 size={14} className="mt-0.5 shrink-0"/>{hours}</p>}
+          <div className="mt-4 flex flex-wrap gap-2">{item.booking_enabled ? <span className="pill bg-saffron-50 text-saffron-700">Pooja booking</span> : <span className="pill bg-brown-100 text-brown-500">Profile only</span>}{item.donation_enabled && <span className="pill bg-blue-50 text-blue-700">Donations</span>}{item.listing_type === 'service' && <span className="pill bg-brown-100">Enquiry only</span>}</div>
+        </div>
+      </Link>
+    })}</div>
     <CatalogueLoadMore pagination={pagination} href={directoryHref(type, filters, pagination.nextPage)}/>
   </>
 }
