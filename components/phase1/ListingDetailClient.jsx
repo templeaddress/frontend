@@ -12,18 +12,10 @@ import {
 import { clientApi, readAuth } from '@/lib/client-api'
 import { PublicShell } from '@/components/ui'
 import { useDemoPortals } from '@/components/DemoPortalGate'
-import { listingPath } from '@/lib/catalogue'
+import { listingPath, openingText } from '@/lib/catalogue'
 import { AppointmentPanel, ClaimPanel, SponsorPanel } from './ListingPhase2'
 
 const tabs = ['Basic Info', 'Details', 'Contact', 'Donations', 'Poojas']
-
-function openingText(periods = []) {
-  const entries = periods.flatMap(period => {
-    const time = period?.time || [period?.opens, period?.closes].filter(Boolean).join('\u2013')
-    return time ? [`${period.label}: ${time}`] : []
-  })
-  return entries.join(' \u00b7 ') || 'Timings not published'
-}
 
 function Fact({ label, value }) {
   return <div><dt className="text-xs font-semibold uppercase tracking-wide text-brown-500">{label}</dt><dd className="mt-1 font-semibold text-brown-900">{value || 'Not published'}</dd></div>
@@ -147,6 +139,7 @@ export default function ListingDetailClient({ listing }) {
   const hero = listing.cover || gallery[0]?.url
   const profile = listing.temple_profile || {}
   const periods = profile.opening_periods || listing.opening_periods || []
+  const hours = openingText(periods) || 'Timings not published'
   const mapQuery = listing.latitude && listing.longitude ? `${listing.latitude},${listing.longitude}` : `${listing.name_en}, ${listing.address}`
   const mapsSearch = listing.map_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
   const pageUrl = `https://templeaddress.com${listingPath(listing)}`
@@ -169,7 +162,7 @@ export default function ListingDetailClient({ listing }) {
         <div className="flex flex-wrap gap-2"><span className="pill bg-emerald-50 text-emerald-700"><BadgeCheck size={12}/>Verified</span><span className="pill bg-white/90 text-brown-900">{listing.code}</span>{listing.category?.name_en && <span className="pill bg-blue-50 text-blue-800">{listing.category.name_en}</span>}</div>
         <h1 className="mt-5 max-w-4xl text-4xl font-semibold md:text-5xl">{listing.name_en}</h1>
         {listing.name_ml && <p className="ml mt-2 text-xl text-white/90">{listing.name_ml}</p>}
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/90"><span className="flex items-center gap-1.5"><MapPin size={15}/>{listing.address}</span><span className="flex items-center gap-1.5"><Clock3 size={15}/>{openingText(periods)}</span></div>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/90"><span className="flex items-center gap-1.5"><MapPin size={15}/>{listing.address}</span><span className="flex items-center gap-1.5"><Clock3 size={15}/>{hours}</span></div>
       </div>
     </section>
 
@@ -181,7 +174,7 @@ export default function ListingDetailClient({ listing }) {
           <section className="card p-5"><h2 className="text-xl font-semibold">About</h2><p className="mt-2 leading-7 text-brown-700">{listing.description_en || listing.short_description_en || 'Information will be published after verification.'}</p></section>
           {listing.service_profile && <section className="card p-5"><h2 className="text-xl font-semibold">Service provider</h2><dl className="mt-3 grid gap-4 sm:grid-cols-2"><Fact label="Profession" value={listing.service_profile.profession}/><Fact label="Experience (years)" value={listing.service_profile.experience_years}/><Fact label="Qualifications" value={listing.service_profile.qualifications}/><Fact label="Languages" value={listing.service_profile.languages?.join(', ')}/></dl><h3 className="mt-5 font-semibold">Services offered</h3>{listing.service_offerings?.map(row => <div className="mt-3 border-t pt-3" key={row.name_en}><b>{row.name_en}</b><p>{row.description_en}</p><p className="text-sm text-brown-500">{row.indicative_price_text} · {row.duration_text} · {row.availability_text}</p></div>)}<p className="mt-4 text-sm text-brown-500">Contact the provider with an enquiry for availability.</p></section>}
           {listing.festival_profile && <section className="card p-5"><h2 className="text-xl font-semibold">Festival details</h2><dl className="mt-3 grid gap-4 sm:grid-cols-2"><Fact label="Organiser" value={listing.festival_profile.organiser}/><Fact label="Venue" value={listing.festival_profile.venue}/><Fact label="Starts" value={listing.festival_profile.start_date}/><Fact label="Ends" value={listing.festival_profile.end_date}/></dl><h3 className="mt-5 font-semibold">Programme</h3>{listing.programmes?.map((row, index) => <p key={index} className="mt-3 border-t pt-3">{row.date} {row.start_time} · {row.name_en} {row.performer}</p>)}</section>}
-          <section className="card p-5"><h2 className="font-semibold">Basic details</h2><dl className="mt-4 grid gap-5 sm:grid-cols-2"><Fact label="Name (English)" value={listing.name_en}/><Fact label="Name (Malayalam)" value={listing.name_ml}/><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Category" value={listing.category?.name_en}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="District" value={listing.district?.name_en}/><Fact label="Opening hours" value={openingText(periods)}/><Fact label="Pincode" value={listing.pincode}/></dl></section>
+          <section className="card p-5"><h2 className="font-semibold">Basic details</h2><dl className="mt-4 grid gap-5 sm:grid-cols-2"><Fact label="Name (English)" value={listing.name_en}/><Fact label="Name (Malayalam)" value={listing.name_ml}/><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Category" value={listing.category?.name_en}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="District" value={listing.district?.name_en}/><Fact label="Opening hours" value={hours}/><Fact label="Pincode" value={listing.pincode}/></dl></section>
           {(listing.speciality || listing.guidelines) && <section className="grid gap-4 sm:grid-cols-2">{listing.speciality && <div className="card p-5"><h3 className="font-semibold">Speciality</h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.speciality}</p></div>}{listing.guidelines && <div className="card p-5"><h3 className="font-semibold">Visitor guidelines</h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.guidelines}</p></div>}</section>}
           <section className={`grid gap-6 ${demoPortals ? 'sm:grid-cols-2' : ''}`}><div className="card p-5"><h3 className="font-semibold">Deities</h3><div className="mt-3 flex flex-wrap gap-2">{(profile.main_deity || listing.main_deity) && !(listing.deities || []).some(deity => deity.is_primary || deity.name_en === (profile.main_deity || listing.main_deity)) && <span className="pill bg-saffron-50 text-saffron-700">{profile.main_deity || listing.main_deity} ? main</span>}{(listing.deities || []).map(deity => <span key={deity.code} className={`pill ${deity.is_primary ? 'bg-saffron-50 text-saffron-700' : 'bg-brown-100 text-brown-700'}`}>{deity.name_en}{deity.is_primary ? ' · main' : ''}</span>)}</div></div>{demoPortals && <div className="card p-5"><h3 className="font-semibold">Nearby places</h3>{listing.nearby_places?.length ? <ul className="mt-3 space-y-2 text-sm">{listing.nearby_places.map(place => <li key={place.name_en} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-600"/><span>{place.name_en}{place.distance_km ? ` · ${place.distance_km} km` : ''}</span></li>)}</ul> : <p className="mt-2 text-sm text-brown-500">Nearby places have not been published.</p>}</div>}</section>
           <Gallery images={gallery} listingName={listing.name_en}/>
@@ -201,7 +194,7 @@ export default function ListingDetailClient({ listing }) {
         {listing.listing_type === 'service' && <AppointmentPanel listing={listing}/>}
         <ContactPanel listing={listing}/>
         <Suspense fallback={null}><SponsorPanel listing={listing}/></Suspense>
-        <div className="card p-5"><h3 className="font-semibold">Quick info</h3><dl className="mt-4 grid gap-4"><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="Location" value={listing.district?.name_en}/><Fact label="Opening" value={openingText(periods)}/></dl></div>
+        <div className="card p-5"><h3 className="font-semibold">Quick info</h3><dl className="mt-4 grid gap-4"><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="Location" value={listing.district?.name_en}/><Fact label="Opening" value={hours}/></dl></div>
         <div className="card p-5"><div className="flex items-center gap-2"><BarChart3 size={17}/><h3 className="font-semibold">Listing activity</h3></div><div className="mt-3 grid grid-cols-2 gap-2"><Metric label="Views" value={listing.analytics?.views}/><Metric label="Shares" value={listing.analytics?.shares}/><Metric label="Contacts" value={listing.analytics?.contact_reveals}/><Metric label="Enquiries" value={listing.analytics?.enquiries}/></div></div>
         <div className="card p-5 text-center"><div className="mx-auto w-fit rounded-xl border-4 border-brown-900 bg-white p-2"><QRCodeSVG value={pageUrl} size={112}/></div><p className="mt-3 text-sm font-semibold">{listingLabel} QR code</p><p className="text-xs text-brown-500">Scan to open this verified page.</p></div>
         <ClaimPanel listing={listing}/>
