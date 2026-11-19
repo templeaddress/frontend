@@ -162,6 +162,7 @@ export default function ListingDetailClient({ listing }) {
         <div className="flex flex-wrap gap-2"><span className="pill bg-emerald-50 text-emerald-700"><BadgeCheck size={12}/>Verified</span><span className="pill bg-white/90 text-brown-900">{listing.code}</span>{listing.category?.name_en && <span className="pill bg-blue-50 text-blue-800">{listing.category.name_en}</span>}</div>
         <h1 className="mt-5 max-w-4xl text-4xl font-semibold md:text-5xl">{listing.name_en}</h1>
         {listing.name_ml && <p className="ml mt-2 text-xl text-white/90">{listing.name_ml}</p>}
+        {listing.review_summary?.count > 0 && <p className="mt-3 text-sm text-white/90">{listing.review_summary.average.toFixed(1)} out of 5 · {listing.review_summary.count} {listing.review_summary.count === 1 ? 'review' : 'reviews'}</p>}
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/90"><span className="flex items-center gap-1.5"><MapPin size={15}/>{listing.address}</span><span className="flex items-center gap-1.5"><Clock3 size={15}/>{hours}</span></div>
       </div>
     </section>
