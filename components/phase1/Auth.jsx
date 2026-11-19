@@ -143,8 +143,9 @@ export default function Phase1Login({ initialMode = 'login' }) {
     else {
       const script = document.createElement('script')
       script.src = 'https://accounts.google.com/gsi/client?hl=en'; script.async = true; script.defer = true; script.onload = setup
+      script.onerror = () => setError('Google sign-in could not load. Try again or continue with mobile OTP.')
       document.head.appendChild(script)
-      return () => script.remove()
+      return () => { script.onerror = null; script.remove() }
     }
   }, [finish, step, mode, referralCode])
 
@@ -187,7 +188,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
         if (!session?.access || session.user?.uuid !== result.uuid) throw new Error('Your session changed. Please sign in again.')
         finish({ ...session, user: result })
       } else finish(result)
-    } catch (err) { setError(err.message) } finally { setBusy(false) }
+    } catch (err) { setError(loginErrorMessage(err)) } finally { setBusy(false) }
   }
 
   async function saveProfile(event) {

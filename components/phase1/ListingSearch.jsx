@@ -28,7 +28,14 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
           return apiFetch(`listings/suggestions?${params}`, { signal: controller.signal })
         }))).flat()
         if (controller.signal.aborted) return
-        setMatches({ query: term, rows: data }); setActive(-1)
+        const normalized = term.toLowerCase().replace(/\s+/g, ' ')
+        const rank = row => {
+          const names = [row.name_en, row.name_ml].filter(Boolean).map(name => name.toLowerCase().replace(/\s+/g, ' '))
+          if (row.code?.toLowerCase() === normalized || names.includes(normalized)) return 0
+          return names.some(name => name.startsWith(normalized)) ? 1 : 2
+        }
+        const ranked = type === 'all' ? data.sort((left, right) => rank(left) - rank(right)) : data
+        setMatches({ query: term, rows: ranked }); setActive(-1)
         setOpen(focused.current && !dismissed.current)
       } catch {
         if (!controller.signal.aborted) { setMatches({ query: term, rows: [] }); setOpen(false) }
@@ -59,7 +66,7 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
         }
         if (event.key === 'Enter' && expanded && active >= 0) { event.preventDefault(); choose(rows[active]) }
       }}/>
-    {expanded && <span id={`${id}-suggestions`} role="listbox" aria-label="Suggested listings" className="absolute inset-x-0 top-full z-30 mt-1 max-h-96 overflow-y-auto rounded-xl border border-brown-100 bg-white py-1 text-brown-900 shadow-lg">
+    {expanded && <span id={`${id}-suggestions`} role="listbox" aria-label="Suggested listings" className="absolute inset-x-0 top-full z-20 mt-1 max-h-96 overflow-y-auto rounded-xl border border-brown-100 bg-white py-1 text-brown-900 shadow-lg">
       {rows.map((row, index) => <button id={`${id}-${index}`} key={row.uuid} type="button" role="option" aria-selected={active === index}
         className={`block w-full px-4 py-3 text-left text-sm hover:bg-brown-50 ${active === index ? 'bg-brown-50' : ''}`}
         onMouseDown={event => event.preventDefault()} onClick={() => choose(row)}>

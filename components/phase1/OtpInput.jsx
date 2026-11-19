@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './Template.module.css'
 
-export default function OtpInput({ value, onChange, label = '6-digit OTP', hint, disabled = false }) {
+export default function OtpInput({ value, onChange, label = '6-digit OTP', hint, disabled = false, invalid = false, errorId }) {
   const [digits, setDigits] = useState(() => Array.from({ length: 6 }, (_, index) => value[index] || ''))
   const inputs = useRef([])
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function OtpInput({ value, onChange, label = '6-digit OTP', hint,
     <legend>{label}</legend>
     <div className={styles.otpRow}>{Array.from({ length: 6 }, (_, index) => <input
       key={index} ref={element => { inputs.current[index] = element }} className={styles.otpInput}
-      aria-label={`OTP digit ${index + 1}`} autoFocus={index === 0} inputMode="numeric"
+      aria-label={`OTP digit ${index + 1}`} aria-invalid={invalid || undefined} aria-describedby={invalid ? errorId : undefined} autoFocus={index === 0} inputMode="numeric"
       autoComplete={index === 0 ? 'one-time-code' : 'off'} pattern="[0-9]" maxLength={6}
       value={digits[index] || ''} required onFocus={event => event.target.select()}
       onChange={event => update(index, event.target.value)}
