@@ -43,6 +43,7 @@
 .otpRow { display: flex; justify-content: center; gap: .45rem; }
 .otpInput { width: 46px; min-width: 0; height: 50px; border: 1px solid #d5cab6; border-radius: 10px; background: #fff; text-align: center; font-size: 1.2rem; }
 .otpInput:focus { outline: 2px solid #ca6b1f; outline-offset: 2px; }
+.otpInput[aria-invalid="true"] { border-color: #b91c1c; }
 .authPage { min-height: 65vh; padding: 2rem 1rem 3rem; background: linear-gradient(180deg, #ebe5d6 0%, #ebe5d6 58%, #edf0f5 58%); }
 .authPanel { max-width: 520px; margin: auto; border-radius: 16px; background: #f8f4eb; border: 1px solid #e8dcc8; box-shadow: 0 26px 48px #11182726; overflow: hidden; }
 .authHeader { padding: 1rem; border-bottom: 1px solid #e5ddcf; color: #7f1d1d; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }

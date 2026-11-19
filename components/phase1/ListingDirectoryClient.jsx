@@ -61,7 +61,7 @@ export default function ListingDirectoryClient({ initialPage, initialFilters = E
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-brown-100 pt-4">
         {type === 'temple' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={bookable} onChange={event => updateFilter('bookable', event.target.checked)}/>Pooja booking open</label>}
-        <label className="ml-auto flex items-center gap-2 text-sm"><span className="text-brown-500">Sort</span><select className="input !w-auto !py-2" value={sort} onChange={event => updateFilter('sort', event.target.value)}><option value="relevance">{type === 'temple' ? 'Pooja booking first' : 'Relevance'}</option><option value="name_asc">Name A–Z</option><option value="name_desc">Name Z–A</option></select></label>
+        <label className="ml-auto flex items-center gap-2 text-sm"><span className="text-brown-500">Sort</span><select className="input !w-auto !py-2" value={sort} onChange={event => updateFilter('sort', event.target.value)}><option value="relevance">{type === 'temple' && !filters.query ? 'Pooja booking first' : 'Relevance'}</option><option value="name_asc">Name A–Z</option><option value="name_desc">Name Z–A</option></select></label>
         <button type="button" className="btn-g !py-2" onClick={reset}>Reset</button>
       </div>
     </section>

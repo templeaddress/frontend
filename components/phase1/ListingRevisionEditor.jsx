@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Field, Input } from '@/components/ui'
-import { clientApi } from '@/lib/client-api'
+import { clientApi, loginErrorMessage } from '@/lib/client-api'
 import { listingDeities } from '@/lib/listing-deities'
 
 const sections = {
@@ -63,8 +63,9 @@ export default function ListingRevisionEditor({ listing, revision, onChange, rea
       else setNotice('Saved successfully.')
       try { await onChange() } catch (err) { setError(`Saved, but could not refresh: ${err.message}`) }
     } catch (err) {
-      if (showFeedback) setFeedback({ ok: false, message: err.message || 'Please try again.' })
-      else setError(err.message)
+      const message = loginErrorMessage(err)
+      if (showFeedback) setFeedback({ ok: false, message: message || 'Please try again.' })
+      else setError(message)
     } finally { setBusy(false) }
   }
   async function save(event, section) {
@@ -99,7 +100,7 @@ export default function ListingRevisionEditor({ listing, revision, onChange, rea
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}{notice && <p role="status" className="rounded-xl bg-emerald-50 p-3">{notice}</p>}
     {editable && Object.entries(sections).filter(([section]) => section !== 'contact' || revision.can_access_private).map(([section, fields]) => <form key={`${revision.uuid}-${section}`} onSubmit={event => save(event, section)} className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="text-lg font-semibold capitalize md:col-span-2">{section}</h3>{fields.map(([key, label]) => <Field label={label} key={key}>{section === 'details' || key.includes('description') || key === 'address' ? <textarea className="input" name={key} defaultValue={(section === 'contact' ? snapshot.contact : snapshot)?.[key] || ''} rows={3}/> : <Input name={key} defaultValue={(section === 'contact' ? snapshot.contact : snapshot)?.[key] || ''}/>}</Field>)}
       {section === 'location' && ['category', 'district'].map(kind => <Field key={kind} label={kind === 'category' ? 'Category' : 'District'}><select name={kind} defaultValue={snapshot[kind] || ''} className="input"><option value="">Choose {kind}</option>{(masters[kind] || []).map(row => <option key={row.code} value={row.code}>{row.name_en}</option>)}</select></Field>)}
-      {section === 'details' && <>{profiles[listing.listing_type].map(([key, label, type = 'text']) => key === 'main_deity' ? (masters.deity && <MainDeityField key={`${revision.uuid}-main-deity`} value={profile.main_deity || ''} options={masters.deity}/>) : <Field key={key} label={label}><Input name={key} type={type} min={type === 'number' ? 0 : undefined} defaultValue={Array.isArray(profile[key]) ? profile[key].join(', ') : profile[key] || ''}/></Field>)}{listing.listing_type === 'temple' && <>{['Morning', 'Evening'].map(label => { const period = profile.opening_periods?.find(row => row.label === label); return ['opens', 'closes'].map(key => <Field key={`${label}-${key}`} label={`${label} ${key === 'opens' ? 'opening' : 'closing'} time`}><Input name={`${label}_${key}`} type="time" defaultValue={period?.[key] || ''}/></Field>) })}<Field label="Sub-deities (multiple selection)"><div className="input max-h-60 space-y-2 overflow-y-auto">{deityChoices.map((row, index) => <label key={row.code || row.custom_name} className="flex items-center gap-2"><input type="checkbox" name="deities" value={index} defaultChecked={(snapshot.deities || []).some(selected => !selected.is_primary && (row.code ? selected.code === row.code : selected.custom_name === row.custom_name))}/>{row.name}</label>)}</div></Field></>}
+      {section === 'details' && <>{profiles[listing.listing_type].map(([key, label, type = 'text']) => key === 'main_deity' ? (masters.deity && <MainDeityField key={`${revision.uuid}-main-deity`} value={profile.main_deity || ''} options={masters.deity}/>) : <Field key={key} label={label}><Input name={key} type={type} min={type === 'number' ? 0 : undefined} defaultValue={Array.isArray(profile[key]) ? profile[key].join(', ') : profile[key] || ''}/></Field>)}{listing.listing_type === 'temple' && <>{['Morning', 'Evening'].map(label => { const period = profile.opening_periods?.find(row => row.label === label); return ['opens', 'closes'].map(key => <Field key={`${label}-${key}`} label={`${label} ${key === 'opens' ? 'opening' : 'closing'} time`}><Input name={`${label}_${key}`} type="time" defaultValue={period?.[key] || ''}/></Field>) })}<div><span className="label">Sub-deities (multiple selection)</span><details><summary className="input cursor-pointer">Choose sub-deities</summary><div className="input mt-2 max-h-60 space-y-2 overflow-y-auto">{deityChoices.map((row, index) => <label key={row.code || row.custom_name} className="flex items-center gap-2"><input type="checkbox" name="deities" value={index} defaultChecked={(snapshot.deities || []).some(selected => !selected.is_primary && (row.code ? selected.code === row.code : selected.custom_name === row.custom_name))}/>{row.name}</label>)}</div></details></div></>}
         <Rows title="Nearby places" value={nearby} onChange={setNearby} fields={[["name_en", "Name"], ["distance_km", "Distance in km", "number"]]}/>
         {listing.listing_type === 'festival' && <Rows title="Programme" value={programmes} onChange={setProgrammes} fields={[["name_en", "Programme name"], ["date", "Date", "date"], ["start_time", "Starts", "time"], ["end_time", "Ends", "time"], ["performer", "Performer"], ["details", "Details"]]}/>}
         {listing.listing_type === 'service' && <Rows title="Services offered" value={offerings} onChange={setOfferings} fields={[["name_en", "Service name"], ["indicative_price_amount", "Indicative price", "number"], ["duration_text", "Duration"], ["availability_text", "Availability"]]}/>}</>}

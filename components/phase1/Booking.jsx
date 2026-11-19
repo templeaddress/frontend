@@ -106,7 +106,7 @@ function AddForm({ option, me, family, stars, onAdd, onCancel, busy, error }) {
   }
   const chip = (value, label) => <button type="button" key={value} onClick={() => choose(value)} aria-pressed={who === value} className={`rounded-full border px-3 py-1 text-sm ${who === value ? 'border-saffron-600 bg-saffron-50 font-semibold text-saffron-700' : 'border-brown-200'}`}>{label}</button>
   return <form onSubmit={event => { event.preventDefault(); onAdd({ who, devotee_name: devotee.trim(), star_value: star, service_date: date, quantity: Number(quantity), prasadam: prasadam === 'home_delivery' ? { method: prasadam, ...address, mobile: `+91${localMobile(address.mobile)}` } : { method: prasadam }, recurrence: repeat ? { frequency, count: Number(count) } : null, dates }) }} className="mt-4 space-y-4 border-t pt-4">
-    <div><p className="text-sm font-semibold">Who is this pooja for?</p><div className="mt-2 flex flex-wrap gap-2">{me && chip('me', `Me${self.name ? ` (${self.name})` : ''}`)}{family.map(row => chip(row.uuid, row.name))}{chip('other', 'Someone else')}</div></div>
+    <div><p className="text-sm font-semibold">Who is this pooja for?</p><div className="mt-2 flex flex-wrap gap-2">{chip('me', `Me${self.name ? ` (${self.name})` : ''}`)}{family.map(row => chip(row.uuid, row.name))}{chip('other', 'Someone else')}</div></div>
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Devotee name"><Input value={devotee} onChange={event => setDevotee(event.target.value)} maxLength={160} required placeholder="Name for the sankalpam"/></Field>
       <Field label="Nakshatra (star)"><StarSelect stars={stars} value={star} onChange={event => setStar(event.target.value)}/></Field>
@@ -213,6 +213,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
       const date = option.item_type === 'special_pooja' ? option.occurrence.date : line.recurrence ? `${line.dates.length} dates · ${line.dates[0]} to ${line.dates.at(-1)}` : line.service_date
       setCart(rows => [...rows, { key, item, name: option.name_en, date, devotee: line.devotee_name, star: stars.find(row => row.code === line.star_value)?.name_en || '', quantity: line.quantity, amount: Number(quoted.amount_total), delivery: line.prasadam?.method === 'home_delivery' }])
       setEditing('')
+      if (line.who === 'me') setContact(value => ({ ...value, name: value.name || line.devotee_name }))
       // Remember the devotee's own star the first time they give it, so later bookings are prefilled.
       if (line.who === 'me' && line.star_value && me && !me.default_ritual_details?.star_value) {
         const default_ritual_details = { ...(me.default_ritual_details || {}), star_kind: 'nakshatra', star_value: line.star_value }
