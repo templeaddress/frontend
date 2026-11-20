@@ -1,4 +1,4 @@
-import { Apple, Download, MapPin, Smartphone, Sparkles } from 'lucide-react'
+import { Apple, Download, FileText, MapPin, Smartphone, Sparkles } from 'lucide-react'
 import { PublicShell, TempleMark } from '@/components/ui'
 import { appDownloads } from '@/lib/app-downloads'
 import styles from './page.module.css'
@@ -50,6 +50,11 @@ export default function DownloadAppPage() {
               {!downloads.android && <p className={styles.availability}>The Android download will be available here soon. You can continue using TempleAddress on the web.</p>}
               {downloads.android && <p className={styles.availability}>Download the Android APK, then open the downloaded file to install TempleAddress.</p>}
             </div>
+            <nav className={styles.resources} aria-label="TempleAddress documents">
+              <h3>Documents</h3>
+              <a href="/Service_agreement_v2.pdf" target="_blank" rel="noreferrer"><FileText size={18} aria-hidden="true" /><span>Service agreement</span><span className={styles.documentType}>PDF</span></a>
+              <a href="/TempleAddress_Brochers_v1.pdf" target="_blank" rel="noreferrer"><FileText size={18} aria-hidden="true" /><span>TempleAddress brochure</span><span className={styles.documentType}>PDF</span></a>
+            </nav>
           </div>
           <p className={styles.caption}>Simple tools for a more connected spiritual journey.</p>
         </div>
