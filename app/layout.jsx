@@ -1,6 +1,7 @@
 import localFont from 'next/font/local'
 import './globals.css'
 import DemoPortalGate from '@/components/DemoPortalGate'
+import SiteAnalytics from '@/components/SiteAnalytics'
 import { isProductionSite } from '@/lib/site-env'
 
 /* Bundled fonts keep builds independent of Google Fonts response formats. */
@@ -55,6 +56,10 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }) {
+  const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+  const productionAnalytics = process.env.NODE_ENV === 'production'
+    && process.env.NEXT_PUBLIC_APP_ENV === 'production'
+    && measurementId
   return (
     <html
       lang="en"
@@ -63,6 +68,8 @@ export default function RootLayout({ children }) {
     >
       <body className="bg-brown-50 text-brown-900 antialiased">
         <DemoPortalGate>{children}</DemoPortalGate>
+        {/* Collection stays off until a consent control supplies the visitor's choice. */}
+        {productionAnalytics && <SiteAnalytics measurementId={measurementId} />}
       </body>
     </html>
   )

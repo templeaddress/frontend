@@ -7,6 +7,7 @@ import { Field, Input } from '@/components/ui'
 export default function StaffListingTools({ listing, onChange, hideVisibility = false }) {
   const [documents, setDocuments] = useState([]), [beneficiary, setBeneficiary] = useState(null), [members, setMembers] = useState([])
   const [users, setUsers] = useState([]), [search, setSearch] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('')
+  const [transactionChanges, setTransactionChanges] = useState(null)
   const root = `staff/listings/${listing.uuid}`
   useEffect(() => {
     let active = true
@@ -36,6 +37,38 @@ export default function StaffListingTools({ listing, onChange, hideVisibility = 
     {beneficiary?.uuid && <div className="rounded-xl bg-cream-50 p-3"><b>Beneficiary details</b><p>{beneficiary.beneficiary_name} · {beneficiary.registration_number || 'No registration number'} · {beneficiary.status}</p>{beneficiary.review_note && <p>{beneficiary.review_note}</p>}</div>}
     {!documents.length && <p className="text-sm text-brown-500">No supporting documents submitted.</p>}{documents.map(doc => <div key={doc.uuid} className="flex flex-wrap items-center gap-3 rounded-xl border p-3"><span className="capitalize">{doc.kind.replaceAll('_', ' ')} · {doc.review_status}</span>{doc.review_note && <p>{doc.review_note}</p>}<button className="btn-g" disabled={busy} onClick={() => download(doc)}>Download</button>{doc.review_status === 'submitted' && <><button className="btn-g" disabled={busy} onClick={() => review(doc, 'verified')}>Verify document</button><button className="btn-g" disabled={busy} onClick={() => review(doc, 'rejected')}>Reject document</button></>}</div>)}
     {!hideVisibility && ['published', 'disabled'].includes(listing.publication_status) && <button className="btn-g" disabled={busy} onClick={() => { const status = listing.publication_status === 'published' ? 'disabled' : 'published'; const note = reason(`Reason to ${status === 'disabled' ? 'disable' : 'republish'} this approved listing:`); if (note) run(() => clientApi(`${root}/visibility`, { method: 'POST', body: { status, reason: note } })) }}>{listing.publication_status === 'published' ? 'Disable public listing' : 'Republish approved listing'}</button>}
+    {!hideVisibility && listing.publication_status === 'published' && <button type="button" className="btn-g ml-2" disabled={busy} aria-expanded={transactionChanges !== null} onClick={() => setTransactionChanges(changes => changes === null ? {} : null)}>Manage transactions</button>}
+    {transactionChanges !== null && <form className="space-y-3" onSubmit={event => {
+      event.preventDefault()
+      const note = reason('Reason for changing transaction availability:')
+      if (note) run(async () => {
+        await clientApi(`${root}/transactions`, { method: 'POST', body: { ...transactionChanges, reason: note } })
+        setTransactionChanges(null)
+      })
+    }}>
+      <fieldset disabled={busy} className="space-y-2">
+        <legend className="font-semibold">Online transactions</legend>
+        <p className="text-sm text-brown-500">Check to enable or uncheck to disable. Changes apply after saving.</p>
+        {[['booking_enabled', 'Pooja bookings'], ['donation_enabled', 'Donations']].map(([field, label]) => (
+          <label key={field} className="flex items-center gap-2">
+            <input type="checkbox" checked={transactionChanges[field] ?? Boolean(listing[field])} onChange={event => {
+              const checked = event.target.checked
+              setTransactionChanges(changes => {
+                const next = { ...changes }
+                if (checked === Boolean(listing[field])) delete next[field]
+                else next[field] = checked
+                return next
+              })
+            }}/>
+            {label}
+          </label>
+        ))}
+      </fieldset>
+      <div className="flex gap-2">
+        <button className="btn-p" disabled={busy || !Object.keys(transactionChanges).length}>Save changes</button>
+        <button type="button" className="btn-g" disabled={busy} onClick={() => setTransactionChanges(null)}>Cancel</button>
+      </div>
+    </form>}
     <h4 className="font-semibold">Event Editor access</h4><p className="text-sm text-brown-500">Event Editor access is limited to free events on a published Temple or Service listing.</p>{members.map(member => <div key={member.uuid} className="flex flex-wrap items-center gap-3"><span>{member.name} · {member.status}{member.end_reason ? ` · ${member.end_reason}` : ''}</span>{member.status === 'active' && <button className="btn-g" disabled={busy} onClick={() => { const note = reason(`Reason to end ${member.name}'s Event Editor access:`); if (note) run(async () => { await clientApi(`${root}/memberships/${member.uuid}/end`, { method: 'POST', body: { reason: note } }); setMembers(await clientApi(`${root}/event-editors`)) }) }}>End access</button>}</div>)}
     {canManage && <><form className="flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); run(async () => setUsers((await clientApi(`staff/users?search=${encodeURIComponent(search)}`)).results)) }}><Field label="Find registered user"><Input value={search} required minLength={2} onChange={e => setSearch(e.target.value)} placeholder="Name or mobile"/></Field><button className="btn-g" disabled={busy}>Find user</button></form>{users.map(user => <div key={user.uuid} className="flex flex-wrap items-center gap-3"><span>{user.name || user.username} · {user.mobile_e164}</span><button className="btn-g" disabled={busy || !user.is_active} onClick={() => { const note = reason(`Verification reason for granting Event Editor to ${user.name || user.username}:`); if (note) run(async () => { await clientApi(`${root}/memberships`, { method: 'POST', body: { user_uuid: user.uuid, role: 'event_editor', reason: note } }); setMembers(await clientApi(`${root}/event-editors`)); setUsers([]) }) }}>Grant Event Editor</button></div>)}</>}
   </section>
