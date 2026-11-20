@@ -36,6 +36,13 @@
 .availability, .caption { color: #94745e; font-size: .85rem; line-height: 1.65; text-align: center; }
 .availability { padding: 0 .4rem; }
 .caption { margin-top: 1.3rem; }
+.resources { margin: 0 .5rem .5rem; padding: 1.15rem .25rem 0; border-top: 1px solid #eee5dc; }
+.resources h3 { margin: 0 0 .45rem; color: #866951; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.resources a { display: flex; align-items: center; gap: .7rem; padding: .75rem .25rem; color: #4e382b; font-size: .95rem; font-weight: 600; }
+.resources a:hover { color: #d65d0b; }
+.resources a:focus-visible { outline: 3px solid #d6b25c; outline-offset: 2px; border-radius: 4px; }
+.resources a svg { color: #d65d0b; flex-shrink: 0; }
+.documentType { margin-left: auto; color: #94745e; font-size: .75rem; font-weight: 500; }
 @media (max-width: 860px) {
   .layout { grid-template-columns: 1fr; max-width: 620px; gap: 2.5rem; }
   .intro h1 { font-size: clamp(2.6rem, 8vw, 3.8rem); }
