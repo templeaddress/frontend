@@ -7,6 +7,7 @@ import { Field, Input } from '@/components/ui'
 export default function StaffListingTools({ listing, onChange, hideVisibility = false }) {
   const [documents, setDocuments] = useState([]), [beneficiary, setBeneficiary] = useState(null), [members, setMembers] = useState([])
   const [users, setUsers] = useState([]), [search, setSearch] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('')
+  const [disableScope, setDisableScope] = useState(null)
   const root = `staff/listings/${listing.uuid}`
   useEffect(() => {
     let active = true
@@ -36,6 +37,24 @@ export default function StaffListingTools({ listing, onChange, hideVisibility = 
     {beneficiary?.uuid && <div className="rounded-xl bg-cream-50 p-3"><b>Beneficiary details</b><p>{beneficiary.beneficiary_name} · {beneficiary.registration_number || 'No registration number'} · {beneficiary.status}</p>{beneficiary.review_note && <p>{beneficiary.review_note}</p>}</div>}
     {!documents.length && <p className="text-sm text-brown-500">No supporting documents submitted.</p>}{documents.map(doc => <div key={doc.uuid} className="flex flex-wrap items-center gap-3 rounded-xl border p-3"><span className="capitalize">{doc.kind.replaceAll('_', ' ')} · {doc.review_status}</span>{doc.review_note && <p>{doc.review_note}</p>}<button className="btn-g" disabled={busy} onClick={() => download(doc)}>Download</button>{doc.review_status === 'submitted' && <><button className="btn-g" disabled={busy} onClick={() => review(doc, 'verified')}>Verify document</button><button className="btn-g" disabled={busy} onClick={() => review(doc, 'rejected')}>Reject document</button></>}</div>)}
     {!hideVisibility && ['published', 'disabled'].includes(listing.publication_status) && <button className="btn-g" disabled={busy} onClick={() => { const status = listing.publication_status === 'published' ? 'disabled' : 'published'; const note = reason(`Reason to ${status === 'disabled' ? 'disable' : 'republish'} this approved listing:`); if (note) run(() => clientApi(`${root}/visibility`, { method: 'POST', body: { status, reason: note } })) }}>{listing.publication_status === 'published' ? 'Disable public listing' : 'Republish approved listing'}</button>}
+    {!hideVisibility && listing.publication_status === 'published' && (listing.booking_enabled || listing.donation_enabled) && <button type="button" className="btn-g" disabled={busy} aria-expanded={disableScope !== null} onClick={() => setDisableScope(scope => scope === null ? '' : null)}>Disable transactions</button>}
+    {disableScope !== null && <form className="flex flex-wrap items-end gap-2" onSubmit={event => {
+      event.preventDefault()
+      const note = reason('Reason to disable the selected transactions:')
+      if (note) run(async () => {
+        await clientApi(`${root}/disable-transactions`, { method: 'POST', body: { scope: disableScope, reason: note } })
+        setDisableScope(null)
+      })
+    }}>
+      <Field label="Transactions to disable"><select className="input" required value={disableScope} disabled={busy} onChange={event => setDisableScope(event.target.value)}>
+        <option value="">Choose transactions</option>
+        <option value="booking" disabled={!listing.booking_enabled}>Pooja bookings</option>
+        <option value="donation" disabled={!listing.donation_enabled}>Donations</option>
+        <option value="all">All transactions</option>
+      </select></Field>
+      <button className="btn-g" disabled={busy || !disableScope}>Continue</button>
+      <button type="button" className="btn-g" disabled={busy} onClick={() => setDisableScope(null)}>Cancel</button>
+    </form>}
     <h4 className="font-semibold">Event Editor access</h4><p className="text-sm text-brown-500">Event Editor access is limited to free events on a published Temple or Service listing.</p>{members.map(member => <div key={member.uuid} className="flex flex-wrap items-center gap-3"><span>{member.name} · {member.status}{member.end_reason ? ` · ${member.end_reason}` : ''}</span>{member.status === 'active' && <button className="btn-g" disabled={busy} onClick={() => { const note = reason(`Reason to end ${member.name}'s Event Editor access:`); if (note) run(async () => { await clientApi(`${root}/memberships/${member.uuid}/end`, { method: 'POST', body: { reason: note } }); setMembers(await clientApi(`${root}/event-editors`)) }) }}>End access</button>}</div>)}
     {canManage && <><form className="flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); run(async () => setUsers((await clientApi(`staff/users?search=${encodeURIComponent(search)}`)).results)) }}><Field label="Find registered user"><Input value={search} required minLength={2} onChange={e => setSearch(e.target.value)} placeholder="Name or mobile"/></Field><button className="btn-g" disabled={busy}>Find user</button></form>{users.map(user => <div key={user.uuid} className="flex flex-wrap items-center gap-3"><span>{user.name || user.username} · {user.mobile_e164}</span><button className="btn-g" disabled={busy || !user.is_active} onClick={() => { const note = reason(`Verification reason for granting Event Editor to ${user.name || user.username}:`); if (note) run(async () => { await clientApi(`${root}/memberships`, { method: 'POST', body: { user_uuid: user.uuid, role: 'event_editor', reason: note } }); setMembers(await clientApi(`${root}/event-editors`)); setUsers([]) }) }}>Grant Event Editor</button></div>)}</>}
   </section>
