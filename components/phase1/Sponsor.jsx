@@ -9,7 +9,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Check, Globe2, Landmark, PenLine, QrCode, Search, ShieldCheck, Upload, Zap } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Field, Input, PublicShell } from '@/components/ui'
-import { clientApi, isVerifiedUser, readAuth, requireAuth } from '@/lib/client-api'
+import { clientApi, isVerifiedUser, publicCatalogueApi, readAuth, requireAuth } from '@/lib/client-api'
+import { LANGUAGE_CHANGED, useContentLanguage } from '@/components/PublicText'
 import { sponsorReturnPath } from '@/lib/partner'
 import { sponsorItemKey, sponsorshipItems, sponsorshipPreview } from '@/lib/sponsorship'
 import { SITE } from '@/lib/site'
@@ -57,17 +58,23 @@ function PackageCard({ row, active, disabled, featured, onChoose }) {
 
 export function SponsorCheckout() {
   const router = useRouter(), params = useSearchParams()
+  const language = useContentLanguage()
   const [catalogue, setCatalogue] = useState(null), [kind, setKind] = useState('self'), [listing, setListing] = useState(null)
   const [query, setQuery] = useState(''), [results, setResults] = useState([]), [choice, setChoice] = useState('')
   const [referral, setReferral] = useState(''), [referralState, setReferralState] = useState(null), [sponsor, setSponsor] = useState({ name: '', gstin: '', message: '' })
   const [method, setMethod] = useState('razorpay'), [busy, setBusy] = useState(false), [error, setError] = useState('')
   const submitting = useRef(false), checkoutKey = useRef(null), referralRequest = useRef(0)
-  useEffect(() => { clientApi('plans', { auth: false }).then(setCatalogue).catch(err => setError(err.message)) }, [])
+  useEffect(() => {
+    let active = true
+    publicCatalogueApi('plans').then(rows => { if (active) setCatalogue(rows) })
+      .catch(err => { if (active) setError(err.message) })
+    return () => { active = false }
+  }, [language])
   const queryString = params.toString()
   useEffect(() => {
     const query = new URLSearchParams(queryString), uuid = query.get('listing'), slug = query.get('slug')
     if (uuid && readAuth()?.access) clientApi('me/managed-listings').then(rows => { const row = rows.find(item => item.uuid === uuid); if (row) setListing(row) }).catch(() => null)
-    if (slug) clientApi(`listings/${slug}`, { auth: false }).then(setListing).catch(() => null)
+    if (slug) publicCatalogueApi(`listings/${slug}`).then(setListing).catch(() => null)
     if (query.get('kind') === 'third_party') setKind('third_party')
     if (query.get('product')) setChoice(query.get('product'))
     if (query.get('method') && METHODS[query.get('method')]) setMethod(query.get('method'))
@@ -78,9 +85,25 @@ export function SponsorCheckout() {
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return }
     let active = true
-    const timer = window.setTimeout(() => clientApi(`listings?type=temple&search=${encodeURIComponent(query.trim())}&page_size=6`, { auth: false }).then(data => { if (active) setResults(data.results || data) }).catch(() => { if (active) setResults([]) }), 300)
+    const timer = window.setTimeout(() => publicCatalogueApi(`listings?type=temple&search=${encodeURIComponent(query.trim())}&page_size=6`).then(data => { if (active) setResults(data.results || data) }).catch(() => { if (active) setResults([]) }), 300)
     return () => { active = false; window.clearTimeout(timer) }
-  }, [query])
+  }, [query, language])
+  const selectedSlug = listing?.slug
+  useEffect(() => {
+    if (!selectedSlug) return
+    let version = 0
+    const updateLanguage = () => {
+      const request = ++version
+      publicCatalogueApi(`listings/${selectedSlug}`).then(row => {
+        if (request === version) setListing(current => current?.slug === row.slug ? row : current)
+      }).catch(() => null)
+    }
+    window.addEventListener(LANGUAGE_CHANGED, updateLanguage)
+    return () => {
+      version += 1
+      window.removeEventListener(LANGUAGE_CHANGED, updateLanguage)
+    }
+  }, [selectedSlug])
   const items = sponsorshipItems(catalogue)
   const allowed = row => row.available !== false && (kind === 'self' || row.kind === 'package')
   // One "Most chosen" badge: the admin's featured item, else the Patron tier.

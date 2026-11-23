@@ -9,6 +9,7 @@ import OtpInput from './OtpInput'
 import styles from './Template.module.css'
 import { cleanMobile, mobileError, mobileLimits, validMobile } from '@/lib/auth-phone'
 import { signupReferralCode } from '@/lib/referral'
+import PublicText from '@/components/PublicText'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -240,7 +241,7 @@ export default function Phase1Login({ initialMode = 'login' }) {
       {step === 'profile' && <><p className="text-sm text-brown-500">{pendingSession?.user?.mobile_verified_at ? 'Your mobile is verified.' : 'You are signed in with Google.'} Tell us your name once; it is used as the devotee name for your bookings and can be changed later.</p><Field label="Your name"><Input value={name} onChange={event => setName(event.target.value)} minLength={2} maxLength={160} required autoFocus/></Field><Field label="Email" hint="Optional, for receipts"><Input type="email" value={email} onChange={event => setEmail(event.target.value)}/></Field></>}
       {(step === 'identify' || step === 'otp') && mobileField}
       {step === 'identify' && mode === 'register' && <Field label="Email (optional)"><Input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} disabled={busy}/></Field>}
-      {(step === 'google_profile' || step === 'google_mobile' || step === 'google_mobile_otp') && <>{linkingMobile ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Add a mobile number to receive booking updates by WhatsApp and SMS. It is optional.</p> : <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs">Add a mobile number for bookings and account recovery.</span></div>}{mobileField}</>}
+      {(step === 'google_profile' || step === 'google_mobile' || step === 'google_mobile_otp') && <>{linkingMobile ? <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800">Signed in with Google as {email || name}. Add a mobile number to receive booking updates by WhatsApp and SMS. It is optional.</p> : <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><b>{name}</b><br/>{email}<br/><span className="text-xs"><PublicText>Add a mobile number for bookings and account recovery.</PublicText></span></div>}{mobileField}</>}
       {step === 'password' && <><p className="text-sm text-brown-500">{activeIdentifier}</p><Field label="Staff password" hint="Staff accounts need a password and an OTP."><Input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" required autoFocus/></Field></>}
       {verifyingOtp && <OtpInput value={code} onChange={setCode} disabled={busy} label="Enter the 6-digit code" hint={otpChallenge?.debug_otp ? `Local test OTP: ${otpChallenge.debug_otp}` : `Sent to ${otpChallenge?.destination || activeIdentifier}`}/>}
       {step === 'identify' && recaptchaRequired === null && <p role="status" className={styles.hint}>Loading verification…</p>}
@@ -248,15 +249,15 @@ export default function Phase1Login({ initialMode = 'login' }) {
       {notice && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-700">{notice}</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       <button disabled={busy || (step === 'identify' && (!phoneValid || recaptchaRequired === null || (recaptchaRequired && !recaptchaToken))) || ((step === 'google_profile' || step === 'google_mobile') && !phoneValid) || (verifyingOtp && code.length !== 6)} className="btn-p w-full">{busy ? 'Please wait…' : step === 'profile' ? 'Save and continue' : verifyingOtp ? 'Verify & continue' : step === 'google_mobile' ? 'Send OTP' : step === 'password' ? 'Continue to OTP' : step === 'google_profile' ? 'Complete sign-in' : 'Continue'}</button>
-      {verifyingOtp && <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><button type="button" disabled={busy} onClick={() => { if (linkingMobile) { setStep('google_mobile'); setCode(''); setError('') } else reset() }} className="text-saffron-700 underline">Change number</button>
-        {seconds ? <span className="text-brown-500">Resend in {seconds}s</span> : <span className="flex gap-3"><button type="button" disabled={busy} onClick={() => resend()} className="text-saffron-700 underline">Resend</button>{!linkingMobile && <button type="button" disabled={busy} onClick={() => resend('whatsapp')} className="text-saffron-700 underline">Send via WhatsApp</button>}</span>}</div>}
-      {(step === 'password' || step === 'google_profile') && <button type="button" onClick={reset} className="btn-g w-full">Back</button>}
-      {step === 'google_mobile' && <button type="button" disabled={busy} onClick={() => { router.replace(destination); router.refresh() }} className="btn-g w-full">Skip for now</button>}
+      {verifyingOtp && <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><button type="button" disabled={busy} onClick={() => { if (linkingMobile) { setStep('google_mobile'); setCode(''); setError('') } else reset() }} className="text-saffron-700 underline"><PublicText>Change number</PublicText></button>
+        {seconds ? <span className="text-brown-500">Resend in {seconds}s</span> : <span className="flex gap-3"><button type="button" disabled={busy} onClick={() => resend()} className="text-saffron-700 underline"><PublicText>Resend</PublicText></button>{!linkingMobile && <button type="button" disabled={busy} onClick={() => resend('whatsapp')} className="text-saffron-700 underline"><PublicText>Send via WhatsApp</PublicText></button>}</span>}</div>}
+      {(step === 'password' || step === 'google_profile') && <button type="button" onClick={reset} className="btn-g w-full"><PublicText>Back</PublicText></button>}
+      {step === 'google_mobile' && <button type="button" disabled={busy} onClick={() => { router.replace(destination); router.refresh() }} className="btn-g w-full"><PublicText>Skip for now</PublicText></button>}
       {step === 'identify' && GOOGLE_CLIENT_ID && <><div className="flex items-center gap-3 text-xs text-brown-400"><span className="h-px flex-1 bg-brown-100"/>OR<span className="h-px flex-1 bg-brown-100"/></div><div className={styles.googleCard}><p className={styles.hint}>Use Google as an alternative to phone OTP {mode === 'register' ? 'signup' : 'login'}.</p><div className="flex justify-center" ref={googleButton}/></div></>}
     </form>
-    {step === 'identify' && <div className="mt-5 space-y-3 text-center text-sm"><Link href="/staff/login" className="block text-saffron-700 underline">Staff sign in</Link><p className={styles.hint}>Submitting a temple&apos;s basic details? <Link href="/submit-temple" className="text-saffron-700 underline">Use the public form</Link>.</p></div>}
+    {step === 'identify' && <div className="mt-5 space-y-3 text-center text-sm"><Link href="/staff/login" className="block text-saffron-700 underline">Staff sign in</Link><p className={styles.hint}><PublicText>Submitting a temple&apos;s basic details?</PublicText> <Link href="/submit-temple" className="text-saffron-700 underline"><PublicText>Use the public form</PublicText></Link>.</p></div>}
     </div></div>
-    <p className="mt-5 text-center text-sm"><Link href="/temples" className="text-saffron-700">Continue browsing without login</Link></p>
+    <p className="mt-5 text-center text-sm"><Link href="/temples" className="text-saffron-700"><PublicText>Continue browsing without login</PublicText></Link></p>
   </main></PublicShell>
 }
 //

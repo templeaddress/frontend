@@ -1,5 +1,5 @@
 import HomePage from '@/components/home/HomePage'
-import { apiFetch } from '@/lib/api'
+import { publicDisplayFetch } from '@/lib/public-content-server'
 import { JsonLd, organizationSchema, websiteSchema } from '@/lib/seo'
 
 // Static HTML refreshed every five minutes. A failed refresh keeps serving the last good page.
@@ -9,7 +9,7 @@ const rows = data => data?.results || data || []
 
 async function loadHome() {
   const [home, temples, festivals, services] = await Promise.allSettled([
-    apiFetch('home'), apiFetch('listings?type=temple&page_size=12'), apiFetch('listings?type=festival&page_size=8'), apiFetch('listings?type=service&page_size=8'),
+    publicDisplayFetch('home'), publicDisplayFetch('listings?type=temple&page_size=12'), publicDisplayFetch('listings?type=festival&page_size=8'), publicDisplayFetch('listings?type=service&page_size=8'),
   ])
   // A temporary API outage must not fail the deployment build; at run time the last good page keeps serving.
   if (home.status === 'rejected' && process.env.NEXT_PHASE !== 'phase-production-build') throw home.reason
