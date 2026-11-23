@@ -5,14 +5,21 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CalendarClock, ShieldCheck } from 'lucide-react'
-import { clientApi, isVerifiedUser, readAuth, requireAuth } from '@/lib/client-api'
+import { clientApi, isVerifiedUser, publicCatalogueApi, readAuth, requireAuth } from '@/lib/client-api'
+import { useContentLanguage } from '@/components/PublicText'
 import { indiaDate } from '@/lib/booking-dates'
 
 export function SponsorPanel({ listing }) {
   const [data, setData] = useState(null)
   const params = useSearchParams(), referral = params.get('ref')
   const checkout = new URLSearchParams({ slug: listing.slug, kind: 'third_party', ...(referral ? { ref: referral } : {}) })
-  useEffect(() => { clientApi(`listings/${listing.slug}/sponsors`, { auth: false }).then(setData).catch(() => setData(null)) }, [listing.slug])
+  const language = useContentLanguage()
+  useEffect(() => {
+    let active = true
+    publicCatalogueApi(`listings/${listing.slug}/sponsors`).then(value => { if (active) setData(value) })
+      .catch(() => { if (active) setData(null) })
+    return () => { active = false }
+  }, [listing.slug, language])
   if (!data) return null
   return <>
     {data.sponsors.map(row => <div key={row.uuid} className="card p-4"><p className="mb-2 text-xs text-brown-500">Sponsored · {row.title}</p>{row.media_url && <img src={row.media_url} alt={`${row.title} sponsor banner`} className="w-full rounded-xl" loading="lazy"/>}{row.placements?.includes('sponsor_page') && <Link href={`/sponsors/${row.uuid}`} className="mb-2 block text-sm underline">About this sponsor</Link>}{row.message && <p className="mt-2 text-sm">{row.message}</p>}{/^https?:\/\//.test(row.click_url || '') && <a href={row.click_url} rel="sponsored noopener noreferrer" target="_blank" className="text-sm underline">Visit sponsor</a>}</div>)}

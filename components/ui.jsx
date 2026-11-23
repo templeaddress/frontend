@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
 import LanguageControl from './LanguageControl'
+import PublicText from './PublicText'
 import { clientApi, readAuth, subscribeAuth } from '@/lib/client-api'
 import { rolesFor, staffLanding } from '@/lib/staff-access'
 import { vendorLanding } from '@/lib/vendor'
@@ -210,7 +211,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
                   `rounded-lg px-3 py-1.5 text-sm font-medium ${lightHeader
                     ? (isActive ? 'bg-brown-50 text-brown-900' : 'text-brown-700 hover:bg-brown-50')
                     : (isActive ? 'bg-white/15 text-white' : 'text-brown-100 hover:bg-white/10')}`}>
-                  {label}
+                  <PublicText>{label}</PublicText>
                 </ActiveLink>
               ))}
             </nav>
@@ -219,7 +220,7 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
           <LanguageControl />
           {!booking && <Link href="/whatsapp" className="btn-wa hidden !py-2 md:inline-flex"><MessageCircle size={16}/>WhatsApp</Link>}
           <AccountLink href={accountPath} className={`btn !py-2 ${tenant ? 'bg-brown-900 text-white' : booking ? 'border border-brown-200 bg-white text-brown-800 hover:bg-brown-50' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            {signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : vendorPath ? 'Vendor Panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}
+            <PublicText>{signedIn ? accountPath.startsWith('/staff') ? 'Staff panel' : vendorPath ? 'Vendor Panel' : 'Profile' : booking ? 'Login / Register' : 'Login'}</PublicText>
           </AccountLink>
           <button className={`md:hidden ${lightHeader ? 'text-brown-800' : ''}`} onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}
@@ -227,8 +228,8 @@ export function PublicShell({ children, tenant, hideChatbot = false, booking = f
         </div>
         {open && (
           <div className={`border-t px-4 py-2 md:hidden ${lightHeader ? 'border-brown-100' : 'border-white/10'}`}>
-            {pubNav.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm">{label}</Link>)}
-            {!booking && <Link href="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]">Book on WhatsApp</Link>}
+            {pubNav.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm"><PublicText>{label}</PublicText></Link>)}
+            {!booking && <Link href="/whatsapp" className="block px-3 py-2 text-sm text-[#25D366]"><PublicText>Book on WhatsApp</PublicText></Link>}
           </div>
         )}
       </header>

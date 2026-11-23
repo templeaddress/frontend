@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/ui'
 import { JsonLd, breadcrumbSchema } from '@/lib/seo'
 import { SITE, whatsappLink } from '@/lib/site'
+import { CONTENT_TRANSLATION_ENABLED } from '@/lib/content-language'
 
 export const metadata = {
   title: 'User guide',
@@ -40,6 +41,11 @@ export default function HelpPage() {
           <p className="mt-3 text-sm text-brown-700">{body}</p>
         </details>)}</div>
       </section>)}
+      {CONTENT_TRANSLATION_ENABLED && <section id="translation" className="mt-10 space-y-2">
+        <h2 className="text-2xl font-semibold">Language and translation</h2>
+        <p className="text-sm text-brown-600">Choose a language from the website header. TempleAddress uses <a className="underline" href="https://cloud.google.com/translate">Google Cloud Translation</a> for automated translations of public catalogue content. Original text is shown when a translation is unavailable.</p>
+        <p className="text-sm text-brown-600">This service may contain translations powered by Google. Google disclaims all warranties related to the translations, express or implied, including any warranties of accuracy, reliability, and any implied warranties of merchantability, fitness for a particular purpose and noninfringement.</p>
+      </section>}
       <p className="mt-10 text-sm text-brown-500">See also our <Link href="/policies/terms" className="underline">terms</Link>, <Link href="/policies/cancellation" className="underline">cancellation</Link> and <Link href="/policies/refund" className="underline">refund</Link> policies.</p>
     </main>
   </PublicShell>

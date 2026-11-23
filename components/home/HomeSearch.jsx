@@ -7,6 +7,7 @@ import { SlidersHorizontal } from 'lucide-react'
 import { ListingSearchInput } from '@/components/phase1/ListingSearch'
 import { listingPath } from '@/lib/catalogue'
 import { directoryHref, EMPTY_FILTERS } from '@/lib/listing-directory'
+import PublicText from '@/components/PublicText'
 
 const CATEGORIES = [['all', 'All'], ['temple', 'Temples'], ['festival', 'Festivals'], ['service', 'Services'], ['events', 'Events']]
 
@@ -24,13 +25,13 @@ export default function HomeSearch() {
   return <div className="relative z-20 mt-8 max-w-2xl">
     <div role="tablist" aria-label="Search in" className="mb-3 flex flex-wrap gap-2">
       {CATEGORIES.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={type === key} onClick={() => setType(key)}
-        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${type === key ? 'bg-white text-brown-900' : 'bg-white/10 text-white hover:bg-white/20'}`}>{label}</button>)}
+        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${type === key ? 'bg-white text-brown-900' : 'bg-white/10 text-white hover:bg-white/20'}`}><PublicText>{label}</PublicText></button>)}
     </div>
     <form className="flex flex-col gap-2 rounded-2xl bg-white p-2 text-brown-900 shadow-soft sm:flex-row sm:items-start" onSubmit={event => { event.preventDefault(); search(query) }}>
       <div className="min-w-0 flex-1"><ListingSearchInput key={type} type={type === 'events' ? 'temple' : type} suggestions={type !== 'events'} value={query} onChange={setQuery} label={`Search ${type}`} placeholder={placeholder}
         onSelect={row => row.slug ? router.push(listingPath({ ...row, listing_type: row.listing_type || type })) : search(row.name_en)}/></div>
-      <button className="btn-p !py-3 sm:!py-2.5">Search</button>
+      <button className="btn-p !py-3 sm:!py-2.5"><PublicText>Search</PublicText></button>
     </form>
-    {['temple', 'festival', 'service'].includes(type) && <Link href={directoryHref(type)} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-300 hover:text-white"><SlidersHorizontal size={15} aria-hidden="true"/>Advanced search with district, deity and filters</Link>}
+    {['temple', 'festival', 'service'].includes(type) && <Link href={directoryHref(type)} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-300 hover:text-white"><SlidersHorizontal size={15} aria-hidden="true"/><PublicText>Advanced search with district, deity and filters</PublicText></Link>}
   </div>
 }

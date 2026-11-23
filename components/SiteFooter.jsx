@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Apple, ArrowLeftRight, Award, BadgeIndianRupee, Facebook, Globe2, Instagram, Landmark, Linkedin, Lock, Mail, MessageCircle, Rocket, ShieldCheck, Smartphone, Sparkles, Twitter, Youtube, Zap } from 'lucide-react'
 import { Logo } from '@/components/ui'
 import { SITE, whatsappLink } from '@/lib/site'
+import PublicText from '@/components/PublicText'
 
 const SOCIAL_ICONS = { facebook: Facebook, instagram: Instagram, youtube: Youtube, x: Twitter, linkedin: Linkedin }
 
@@ -26,11 +27,11 @@ export default function SiteFooter() {
       <div className="grid gap-10 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
         <div>
           <Logo light/>
-          <p className="mt-3 max-w-xs text-sm text-brown-200">{SITE.tagline} Discover verified temples, book poojas and donate with zero platform fee.</p>
-          <div className="mt-4 flex flex-wrap gap-2 text-[11px]"><Chip icon={ShieldCheck}>Committee verified</Chip><Chip icon={Lock}>Secure payments</Chip></div>
+          <p className="mt-3 max-w-xs text-sm text-brown-200"><PublicText>{SITE.tagline}</PublicText> <PublicText>Discover verified temples, book poojas and donate with zero platform fee.</PublicText></p>
+          <div className="mt-4 flex flex-wrap gap-2 text-[11px]"><Chip icon={ShieldCheck}><PublicText>Committee verified</PublicText></Chip><Chip icon={Lock}><PublicText>Secure payments</PublicText></Chip></div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <a href="/download-app/android" download="TempleaddressApp.apk" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Smartphone size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200">Get it for</small><b className="text-sm text-white">Android</b></span></a>
-            <Link href="/download-app" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Apple size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200">Download for</small><b className="text-sm text-white">iPhone</b></span></Link>
+            <a href="/download-app/android" download="TempleaddressApp.apk" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Smartphone size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200"><PublicText>Get it for</PublicText></small><b className="text-sm text-white">Android</b></span></a>
+            <Link href="/download-app" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/30 px-3 py-2 hover:bg-black/50"><Apple size={20} aria-hidden="true"/><span className="leading-tight"><small className="block text-[10px] text-brown-200"><PublicText>Download for</PublicText></small><b className="text-sm text-white">iPhone</b></span></Link>
           </div>
           <div className="mt-5 space-y-1.5 text-sm">
             <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white"><MessageCircle size={15} className="text-[#25D366]" aria-hidden="true"/>WhatsApp {SITE.whatsappDisplay}</a>
@@ -40,20 +41,20 @@ export default function SiteFooter() {
           {SITE.social.length > 0 && <ul aria-label="TempleAddress on social media" className="mt-5 flex gap-2">{SITE.social.map(([key, label, url]) => { const Icon = SOCIAL_ICONS[key]; return <li key={key}><a href={url} target="_blank" rel="noopener noreferrer" aria-label={label} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-saffron-500"><Icon size={17} aria-hidden="true"/></a></li> })}</ul>}
         </div>
         {COLUMNS.map(([title, links]) => <nav key={title} aria-label={title} className="text-sm">
-          <h2 className="font-sans text-sm font-bold text-white">{title}</h2>
-          <ul className="mt-3 space-y-2">{links.map(([href, label]) => <li key={href}><Link href={href} className="text-brown-200 hover:text-white">{label}</Link></li>)}</ul>
+          <h2 className="font-sans text-sm font-bold text-white"><PublicText>{title}</PublicText></h2>
+          <ul className="mt-3 space-y-2">{links.map(([href, label]) => <li key={href}><Link href={href} className="text-brown-200 hover:text-white"><PublicText>{label}</PublicText></Link></li>)}</ul>
         </nav>)}
       </div>
       <div className="mt-10 grid gap-6 border-t border-white/10 pt-6 md:grid-cols-2">
-        <div><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brown-300">We accept</p><div className="flex flex-wrap gap-2">{PAYMENTS.map(([icon, label]) => <Chip key={label} icon={icon}>{label}</Chip>)}</div><p className="mt-2 text-xs text-brown-300">Payments are processed by Razorpay. TempleAddress never stores card details.</p></div>
-        <div><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brown-300">Proudly part of</p><div className="flex flex-wrap gap-2">{RECOGNITIONS.map(([icon, label]) => <Chip key={label} icon={icon}>{label}</Chip>)}</div>
+        <div><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brown-300"><PublicText>We accept</PublicText></p><div className="flex flex-wrap gap-2">{PAYMENTS.map(([icon, label]) => <Chip key={label} icon={icon}><PublicText>{label}</PublicText></Chip>)}</div><p className="mt-2 text-xs text-brown-300"><PublicText>Payments are processed by Razorpay. TempleAddress never stores card details.</PublicText></p></div>
+        <div><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brown-300"><PublicText>Proudly part of</PublicText></p><div className="flex flex-wrap gap-2">{RECOGNITIONS.map(([icon, label]) => <Chip key={label} icon={icon}>{label}</Chip>)}</div>
           {SITE.registrations.length > 0 && <p className="mt-2 text-xs text-brown-300">{SITE.registrations.map(([label, value]) => `${label}: ${value}`).join(' · ')}</p>}</div>
       </div>
     </div>
     <div className="border-t border-white/10 bg-black/20">
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 pb-24 pt-5 text-xs text-brown-300 md:flex-row md:items-center md:justify-between md:pb-20">
         <p>© {year} {SITE.legalName}. All rights reserved. TempleAddress™ and the TempleAddress logo are trademarks of {SITE.legalName}.</p>
-        <p>Made with devotion in Kerala, India.</p>
+        <p><PublicText>Made with devotion in Kerala, India.</PublicText></p>
       </div>
     </div>
   </footer>

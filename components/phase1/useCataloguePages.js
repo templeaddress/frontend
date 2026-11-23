@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { apiFetch } from '@/lib/api'
+import { browserPublicDisplayFetch } from '@/lib/api'
 import { mergeCatalogueRows } from '@/lib/listing-directory'
 
 // Callers key their results by query so filter changes abort the old collection.
@@ -20,7 +20,7 @@ export function useCataloguePages(query, initialPage, initialPageNumber = 1) {
     controller.current = request
     setLoading(true); setError('')
     try {
-      const data = await apiFetch(`${query}&page=${currentPage.current + 1}`, { signal: request.signal, cache: 'no-store', next: { revalidate: 0 } })
+      const data = await browserPublicDisplayFetch(`${query}&page=${currentPage.current + 1}`, { signal: request.signal, cache: 'no-store', next: { revalidate: 0 } })
       if (request.signal.aborted) return
       currentPage.current += 1
       setCollection(previous => ({ ...data, results: mergeCatalogueRows(previous.results, data.results) }))

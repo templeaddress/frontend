@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, BadgeCheck, CalendarDays, CreditCard, Flame, HandHeart, Landmark, Languages, MapPin, MessageCircle, Quote, ReceiptText, ScrollText, Search, ShieldCheck, Smartphone, Sparkles, Star, Users } from 'lucide-react'
 import { PublicShell, Photo } from '@/components/ui'
 import HomeSearch from './HomeSearch'
+import PublicText, { PublicMonth } from '@/components/PublicText'
 import { listingPath } from '@/lib/catalogue'
 import { SITE, whatsappLink } from '@/lib/site'
 
@@ -10,8 +11,8 @@ const count = value => Number(value || 0).toLocaleString('en-IN')
 
 function SectionHead({ eyebrow, title, text, href, cta = 'View all' }) {
   return <div className="mb-5 flex items-end justify-between gap-4">
-    <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-600">{eyebrow}</p><h2 className="mt-1 text-2xl font-semibold md:text-3xl">{title}</h2>{text && <p className="mt-1 max-w-2xl text-sm text-brown-500">{text}</p>}</div>
-    {href && <Link href={href} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-saffron-700 hover:text-saffron-600">{cta}<ArrowRight size={15} aria-hidden="true"/></Link>}
+    <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-saffron-600"><PublicText>{eyebrow}</PublicText></p><h2 className="mt-1 text-2xl font-semibold md:text-3xl"><PublicText>{title}</PublicText></h2>{text && <p className="mt-1 max-w-2xl text-sm text-brown-500"><PublicText>{text}</PublicText></p>}</div>
+    {href && <Link href={href} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-saffron-700 hover:text-saffron-600"><PublicText>{cta}</PublicText><ArrowRight size={15} aria-hidden="true"/></Link>}
   </div>
 }
 
@@ -32,11 +33,11 @@ function ListingCard({ row, action }) {
   return <Link href={listingPath(row)} className="group card-premium flex h-full flex-col overflow-hidden">
     <Cover src={row.cover} alt={row.name_en} label={row.code}/>
     <div className="flex flex-1 flex-col p-4">
-      <p className="flex items-center gap-1 text-xs font-semibold text-emerald-700"><BadgeCheck size={14} aria-hidden="true"/>Verified</p>
+      <p className="flex items-center gap-1 text-xs font-semibold text-emerald-700"><BadgeCheck size={14} aria-hidden="true"/><PublicText>Verified</PublicText></p>
       <h3 className="mt-1 line-clamp-2 text-lg font-semibold leading-snug">{row.name_en}</h3>
-      {row.name_ml && <p className="ml line-clamp-1 text-sm text-brown-500">{row.name_ml}</p>}
+      {row.name_ml && (!row.original_name_en || row.name_ml !== row.name_en) && <p className="ml line-clamp-1 text-sm text-brown-500">{row.name_ml}</p>}
       <p className="mt-2 flex items-center gap-1 text-sm text-brown-500"><MapPin size={14} aria-hidden="true"/>{row.district?.name_en || 'Kerala'}{row.main_deity ? ` · ${row.main_deity}` : ''}</p>
-      <span className="mt-auto pt-4 text-sm font-semibold text-saffron-700">{action}<ArrowRight size={14} className="ml-1 inline transition group-hover:translate-x-1" aria-hidden="true"/></span>
+      <span className="mt-auto pt-4 text-sm font-semibold text-saffron-700"><PublicText>{action}</PublicText><ArrowRight size={14} className="ml-1 inline transition group-hover:translate-x-1" aria-hidden="true"/></span>
     </div>
   </Link>
 }
@@ -48,13 +49,13 @@ function EventCard({ row }) {
   return <Link href={`/events/${row.slug}`} className="group card-premium flex h-full flex-col overflow-hidden">
     <div className="relative">
       <Cover src={image} alt={row.name_en}/>
-      {date && <span className="absolute bottom-3 left-3 rounded-xl bg-white px-3 py-1.5 text-center leading-tight shadow-soft"><b className="block text-xl text-brown-900">{date.getDate()}</b><small className="text-xs font-semibold uppercase text-saffron-700">{date.toLocaleString('en-IN', { month: 'short' })}</small></span>}
+      {date && <span className="absolute bottom-3 left-3 rounded-xl bg-white px-3 py-1.5 text-center leading-tight shadow-soft"><b className="block text-xl text-brown-900">{date.getDate()}</b><small className="text-xs font-semibold uppercase text-saffron-700"><PublicMonth date={next.date}/></small></span>}
     </div>
     <div className="flex flex-1 flex-col p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-saffron-600">{row.kind === 'special_pooja' ? 'Special pooja' : 'Event'}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-saffron-600"><PublicText>{row.kind === 'special_pooja' ? 'Special pooja' : 'Event'}</PublicText></p>
       <h3 className="mt-1 line-clamp-2 text-lg font-semibold leading-snug">{row.name_en}</h3>
       <p className="mt-1 line-clamp-1 text-sm text-brown-500">{row.host_listing?.name_en}</p>
-      <span className="mt-auto pt-4 text-sm font-semibold text-saffron-700">{row.registration_mode === 'paid_booking' ? 'Book now' : 'View details'}<ArrowRight size={14} className="ml-1 inline transition group-hover:translate-x-1" aria-hidden="true"/></span>
+      <span className="mt-auto pt-4 text-sm font-semibold text-saffron-700"><PublicText>{row.registration_mode === 'paid_booking' ? 'Book now' : 'View details'}</PublicText><ArrowRight size={14} className="ml-1 inline transition group-hover:translate-x-1" aria-hidden="true"/></span>
     </div>
   </Link>
 }
@@ -79,11 +80,11 @@ function Hero({ images, counts }) {
       <svg aria-hidden="true" viewBox="0 0 200 200" className="animate-float absolute -right-16 bottom-0 -z-10 hidden h-[28rem] w-[28rem] text-gold-400/15 lg:block"><g fill="none" stroke="currentColor" strokeWidth=".6">{Array.from({ length: 12 }, (_, i) => <ellipse key={i} cx="100" cy="100" rx="88" ry="30" transform={`rotate(${i * 15} 100 100)`}/>)}<circle cx="100" cy="100" r="22"/><circle cx="100" cy="100" r="96"/></g></svg>
     </div>
     <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-12 md:pb-32 md:pt-20">
-      <p className="fade-up inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-3 py-1 text-xs font-semibold text-gold-300 backdrop-blur"><ShieldCheck size={14} aria-hidden="true"/>Committee-verified temples · Zero platform fee</p>
-      <h1 className="fade-up-1 mt-5 max-w-3xl text-4xl font-semibold leading-[1.08] md:text-6xl">Every temple. <span className="gold-text">One sacred address.</span></h1>
-      <p className="fade-up-2 mt-4 max-w-2xl text-base text-brown-100 md:text-lg">Discover verified temples, festivals and spiritual services across Kerala and beyond. Book poojas, give donations and get your receipt instantly — online, on WhatsApp or in our app.</p>
+      <p className="fade-up inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-3 py-1 text-xs font-semibold text-gold-300 backdrop-blur"><ShieldCheck size={14} aria-hidden="true"/><PublicText>Committee-verified temples · Zero platform fee</PublicText></p>
+      <h1 className="fade-up-1 mt-5 max-w-3xl text-4xl font-semibold leading-[1.08] md:text-6xl"><PublicText>Every temple.</PublicText> <span className="gold-text"><PublicText>One sacred address.</PublicText></span></h1>
+      <p className="fade-up-2 mt-4 max-w-2xl text-base text-brown-100 md:text-lg"><PublicText>Discover verified temples, festivals and spiritual services across Kerala and beyond. Book poojas, give donations and get your receipt instantly — online, on WhatsApp or in our app.</PublicText></p>
       <HomeSearch/>
-      {stats.length > 0 && <dl className="mt-10 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">{stats.map(([value, label]) => <div key={label} className="glass rounded-2xl px-4 py-3"><dt className="text-xs text-brown-200">{label}</dt><dd className="font-display text-2xl font-semibold text-white">{count(value)}+</dd></div>)}</dl>}
+      {stats.length > 0 && <dl className="mt-10 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">{stats.map(([value, label]) => <div key={label} className="glass rounded-2xl px-4 py-3"><dt className="text-xs text-brown-200"><PublicText>{label}</PublicText></dt><dd className="font-display text-2xl font-semibold text-white">{count(value)}+</dd></div>)}</dl>}
     </div>
   </section>
 }
@@ -100,11 +101,11 @@ const ACTIONS = [
 function QuickActions() {
   return <section aria-label="What would you like to do?" className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 md:-mt-20">
     <div className="rounded-3xl border border-brown-100 bg-white/95 p-3 shadow-soft backdrop-blur md:p-4">
-      <p className="mb-3 text-center text-sm font-semibold text-saffron-700">Your temple journey, all in one place</p>
+      <p className="mb-3 text-center text-sm font-semibold text-saffron-700"><PublicText>Your temple journey, all in one place</PublicText></p>
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">{ACTIONS.map(([Icon, title, text, href, tone]) => {
         const external = href.startsWith('https://')
         return <li key={title}><Link href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} className={`group flex h-full flex-col justify-between rounded-2xl bg-gradient-to-br ${tone} p-4 text-white transition hover:-translate-y-0.5 hover:shadow-soft`}>
-          <Icon size={26} aria-hidden="true" className="opacity-90"/><span className="mt-6"><b className="block text-base leading-tight">{title}</b><small className="mt-1 block text-xs text-white/80">{text}</small></span>
+          <Icon size={26} aria-hidden="true" className="opacity-90"/><span className="mt-6"><b className="block text-base leading-tight"><PublicText>{title}</PublicText></b><small className="mt-1 block text-xs text-white/80"><PublicText>{text}</PublicText></small></span>
         </Link></li>
       })}</ul>
     </div>
@@ -137,7 +138,7 @@ function Reviews({ reviews }) {
         <blockquote className="mt-3 line-clamp-5 flex-1 text-sm text-brown-700">{row.body}</blockquote>
         <figcaption className="mt-4 text-sm"><b>{row.name}</b><Link href={listingPath(row.listing)} className="block truncate text-xs text-saffron-700 hover:underline">{row.listing.name_en}</Link></figcaption>
       </figure></RailItem>)}</Rail>
-        : <div className="card flex flex-col items-start gap-3 p-6 md:flex-row md:items-center md:justify-between"><p className="max-w-2xl text-brown-600">Devotee reviews will appear here once they are moderated. Visited or booked at a temple listed with us? Share your experience on its page after signing in.</p><Link href="/temples" className="btn-dk shrink-0">Find a temple</Link></div>}
+        : <div className="card flex flex-col items-start gap-3 p-6 md:flex-row md:items-center md:justify-between"><p className="max-w-2xl text-brown-600"><PublicText>Devotee reviews will appear here once they are moderated. Visited or booked at a temple listed with us? Share your experience on its page after signing in.</PublicText></p><Link href="/temples" className="btn-dk shrink-0"><PublicText>Find a temple</PublicText></Link></div>}
     </div>
   </section>
 }
@@ -153,9 +154,9 @@ export default function HomePage({ temples = [], festivals = [], services = [], 
       {!!events.length && <section><SectionHead eyebrow="Coming up" title="Upcoming events & special poojas" href="/special"/><Rail label="Upcoming events">{events.slice(0, 8).map(row => <RailItem key={row.uuid}><EventCard row={row}/></RailItem>)}</Rail></section>}
       {!!temples.length && <section><SectionHead eyebrow="Verified directory" title="Temples" text="Timings, deities, poojas and online booking — maintained with the temple committee." href="/temples"/><Rail label="Temples">{temples.slice(0, 8).map(row => <RailItem key={row.uuid}><ListingCard row={row} action="Visit temple"/></RailItem>)}</Rail></section>}
       <section className="overflow-hidden rounded-3xl bg-temple-grad p-6 text-white md:p-10">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-300">How it works</p>
-        <h2 className="mt-1 text-2xl font-semibold md:text-3xl">Book a pooja in four simple steps</h2>
-        <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{STEPS.map(([Icon, title, text], index) => <li key={title} className="glass rounded-2xl p-5"><span className="flex items-center justify-between"><Icon size={24} className="text-gold-300" aria-hidden="true"/><b className="font-display text-3xl text-white/25">{index + 1}</b></span><h3 className="mt-4 font-semibold">{title}</h3><p className="mt-1 text-sm text-brown-100">{text}</p></li>)}</ol>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-300"><PublicText>How it works</PublicText></p>
+        <h2 className="mt-1 text-2xl font-semibold md:text-3xl"><PublicText>Book a pooja in four simple steps</PublicText></h2>
+        <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{STEPS.map(([Icon, title, text], index) => <li key={title} className="glass rounded-2xl p-5"><span className="flex items-center justify-between"><Icon size={24} className="text-gold-300" aria-hidden="true"/><b className="font-display text-3xl text-white/25">{index + 1}</b></span><h3 className="mt-4 font-semibold"><PublicText>{title}</PublicText></h3><p className="mt-1 text-sm text-brown-100"><PublicText>{text}</PublicText></p></li>)}</ol>
       </section>
       {!!services.length && <section><SectionHead eyebrow="Spiritual services" title="Priests, astrologers & artists" text="Verified professionals for poojas, ceremonies and temple arts." href="/services"/><Rail label="Services">{services.slice(0, 8).map(row => <RailItem key={row.uuid}><ListingCard row={row} action="View profile"/></RailItem>)}</Rail></section>}
       {!!festivals.length && <section><SectionHead eyebrow="Utsavam" title="Temple festivals" text="Programmes, dates and festival offerings from organising committees." href="/festival"/><Rail label="Festivals">{festivals.slice(0, 8).map(row => <RailItem key={row.uuid}><ListingCard row={row} action="See festival"/></RailItem>)}</Rail></section>}
@@ -163,15 +164,15 @@ export default function HomePage({ temples = [], festivals = [], services = [], 
     <Reviews reviews={reviews}/>
     <div className="mx-auto max-w-6xl space-y-14 px-4 py-14">
       <section><SectionHead eyebrow="Why TempleAddress" title="Authentic, transparent, made for devotees"/>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{PROMISES.map(([Icon, title, text]) => <li key={title} className="card flex gap-4 p-5"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-saffron-50 text-saffron-600"><Icon size={22} aria-hidden="true"/></span><span><h3 className="font-semibold">{title}</h3><p className="mt-1 text-sm text-brown-500">{text}</p></span></li>)}</ul>
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{PROMISES.map(([Icon, title, text]) => <li key={title} className="card flex gap-4 p-5"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-saffron-50 text-saffron-600"><Icon size={22} aria-hidden="true"/></span><span><h3 className="font-semibold"><PublicText>{title}</PublicText></h3><p className="mt-1 text-sm text-brown-500"><PublicText>{text}</PublicText></p></span></li>)}</ul>
       </section>
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="card flex flex-col justify-between gap-5 p-6 md:p-8"><div><Smartphone className="text-saffron-600" size={28} aria-hidden="true"/><h2 className="mt-3 text-2xl font-semibold">Carry your temples with you</h2><p className="mt-2 text-sm text-brown-500">Bookings, receipts and temple updates in the TempleAddress app for Android and iOS.</p></div><Link href="/download-app" className="btn-dk w-fit">Get the app<ArrowRight size={15} aria-hidden="true"/></Link></div>
-        <div className="flex flex-col justify-between gap-5 rounded-2xl bg-[#0f5132] p-6 text-white md:p-8"><div><MessageCircle className="text-[#25D366]" size={28} aria-hidden="true"/><h2 className="mt-3 text-2xl font-semibold">Need help? Just say Hi</h2><p className="mt-2 text-sm text-emerald-50">Book poojas or ask questions on WhatsApp at {SITE.whatsappDisplay}, or ask our AI assistant on any page.</p></div><a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="btn-wa w-fit">Chat on WhatsApp</a></div>
+        <div className="card flex flex-col justify-between gap-5 p-6 md:p-8"><div><Smartphone className="text-saffron-600" size={28} aria-hidden="true"/><h2 className="mt-3 text-2xl font-semibold"><PublicText>Carry your temples with you</PublicText></h2><p className="mt-2 text-sm text-brown-500"><PublicText>Bookings, receipts and temple updates in the TempleAddress app for Android and iOS.</PublicText></p></div><Link href="/download-app" className="btn-dk w-fit"><PublicText>Get the app</PublicText><ArrowRight size={15} aria-hidden="true"/></Link></div>
+        <div className="flex flex-col justify-between gap-5 rounded-2xl bg-[#0f5132] p-6 text-white md:p-8"><div><MessageCircle className="text-[#25D366]" size={28} aria-hidden="true"/><h2 className="mt-3 text-2xl font-semibold"><PublicText>Need help? Just say Hi</PublicText></h2><p className="mt-2 text-sm text-emerald-50"><PublicText values={{ phone: SITE.whatsappDisplay }}>{'Book poojas or ask questions on WhatsApp at {phone}, or ask our AI assistant on any page.'}</PublicText></p></div><a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="btn-wa w-fit"><PublicText>Chat on WhatsApp</PublicText></a></div>
       </section>
       <section className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-gold-400/50 bg-gradient-to-r from-saffron-50 to-white p-6 md:flex-row md:items-center md:p-8">
-        <div className="flex gap-4"><Landmark className="mt-1 shrink-0 text-saffron-600" size={30} aria-hidden="true"/><div><h2 className="text-2xl font-semibold">Is your temple on TempleAddress?</h2><p className="mt-1 text-sm text-brown-600">Free listing for temples, festival committees and service professionals. Committees can accept bookings and donations with daily charts and bank payouts.</p></div></div>
-        <div className="flex flex-wrap gap-2"><Link href="/submit-temple" className="btn-p">Submit a temple</Link><Link href="/login?next=/account/listings/new&intent=create-profile" className="btn-g">Create a profile</Link></div>
+        <div className="flex gap-4"><Landmark className="mt-1 shrink-0 text-saffron-600" size={30} aria-hidden="true"/><div><h2 className="text-2xl font-semibold"><PublicText>Is your temple on TempleAddress?</PublicText></h2><p className="mt-1 text-sm text-brown-600"><PublicText>Free listing for temples, festival committees and service professionals. Committees can accept bookings and donations with daily charts and bank payouts.</PublicText></p></div></div>
+        <div className="flex flex-wrap gap-2"><Link href="/submit-temple" className="btn-p"><PublicText>Submit a temple</PublicText></Link><Link href="/login?next=/account/listings/new&intent=create-profile" className="btn-g"><PublicText>Create a profile</PublicText></Link></div>
       </section>
     </div>
   </PublicShell>
