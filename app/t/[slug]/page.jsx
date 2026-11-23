@@ -2,16 +2,10 @@ import { notFound } from 'next/navigation'
 import { ListingDetail } from '@/components/phase1/Public'
 import { publicContentFetch } from '@/lib/public-content-server'
 import { displayContent } from '@/lib/content-language'
-import { staticParams } from '@/lib/catalogue'
 import { JsonLd, SITE_URL, breadcrumbSchema, listingSharing } from '@/lib/seo'
 
-// Pre-rendered at build and refreshed every five minutes; new temples render on first visit.
-export const revalidate = 300
-export const dynamicParams = true
-
-export function generateStaticParams() {
-  return staticParams('listings?type=temple', row => ({ slug: row.slug }))
-}
+// The selected language comes from a request cookie.
+export const dynamic = 'force-dynamic'
 
 // Runs before anything is streamed, so a missing temple answers HTTP 404 instead of 200.
 async function load(slug) {
