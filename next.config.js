@@ -1,6 +1,10 @@
 import { apiRoot } from './lib/api-url.js'
 
 const isDev = process.env.NODE_ENV !== 'production'
+const analyticsEnabled = !isDev && process.env.NEXT_PUBLIC_APP_ENV === 'production'
+  && /^G-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? '')
+const analyticsScript = analyticsEnabled ? ' https://www.googletagmanager.com/gtag/' : ''
+const analyticsConnect = analyticsEnabled ? ' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com' : ''
 
 function origin(value) {
   try { return new URL(value || '').origin } catch { return '' }
@@ -12,12 +16,12 @@ const mediaOrigins = () => [...new Set([apiOrigin(), origin(process.env.TEMPLEAD
 // Next.js needs inline scripts for hydration; everything else that may run or frame here is listed by name.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://www.gstatic.com/_/translate_http/`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://www.gstatic.com/_/translate_http/${analyticsScript}`,
   "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://translate.googleapis.com https://www.gstatic.com/_/translate_http/ https://fonts.googleapis.com",
   `img-src 'self' data: blob: https: ${mediaOrigins()}`.trim(),
   "font-src 'self' data: https://fonts.gstatic.com",
   "media-src 'self' https:",
-  `connect-src 'self' ${apiOrigin()} https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://translate.googleapis.com https://translate-pa.googleapis.com ${isDev ? 'ws: http://localhost:* http://127.0.0.1:*' : ''}`.trim(),
+  `connect-src 'self' ${apiOrigin()} https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://translate.googleapis.com https://translate-pa.googleapis.com${analyticsConnect} ${isDev ? 'ws: http://localhost:* http://127.0.0.1:*' : ''}`.trim(),
   "frame-src https://*.razorpay.com https://accounts.google.com/gsi/ https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://translate.googleapis.com",
   "worker-src 'self' blob:",
   "object-src 'none'",

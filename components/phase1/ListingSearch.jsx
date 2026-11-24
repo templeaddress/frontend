@@ -3,11 +3,14 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
-import { apiFetch } from '@/lib/api'
+import { browserPublicDisplayFetch } from '@/lib/api'
 import { directoryHref, EMPTY_FILTERS } from '@/lib/listing-directory'
+import { useContentLanguage } from '@/components/PublicText'
+import { publicLabel } from '@/lib/public-labels'
 
 export function ListingSearchInput({ value, onChange, onSelect, type = 'temple', suggestions = true, placeholder = 'Name, code, deity or place', label = 'Search listings' }) {
   const id = useId()
+  const language = useContentLanguage()
   const [matches, setMatches] = useState({ query: '', rows: [] })
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
@@ -25,7 +28,7 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
         const types = type === 'all' ? ['temple', 'festival', 'service'] : [type]
         const data = (await Promise.all(types.map(async listingType => {
           const params = new URLSearchParams({ q: term, type: listingType })
-          return apiFetch(`listings/suggestions?${params}`, { signal: controller.signal })
+          return browserPublicDisplayFetch(`listings/suggestions?${params}`, { signal: controller.signal })
         }))).flat()
         if (controller.signal.aborted) return
         const normalized = term.toLowerCase().replace(/\s+/g, ' ')
@@ -42,7 +45,7 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
       }
     }, 300)
     return () => { window.clearTimeout(timer); controller.abort() }
-  }, [term, type, suggestions])
+  }, [term, type, suggestions, language])
 
   function choose(row) {
     dismissed.current = true
@@ -55,7 +58,7 @@ export function ListingSearchInput({ value, onChange, onSelect, type = 'temple',
   }}>
     <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-brown-400"/>
     <input className="input !pl-9" role="combobox" aria-label={label} aria-autocomplete="list" aria-expanded={expanded} aria-controls={`${id}-suggestions`} aria-activedescendant={expanded && active >= 0 ? `${id}-${active}` : undefined}
-      autoComplete="off" value={value} placeholder={placeholder}
+      autoComplete="off" value={value} placeholder={publicLabel(placeholder, language)}
       onFocus={() => { focused.current = true; dismissed.current = false; setOpen(true) }}
       onChange={event => { dismissed.current = false; setOpen(false); setActive(-1); onChange(event.target.value) }}
       onKeyDown={event => {
