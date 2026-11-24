@@ -6,7 +6,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Field, Input, PublicShell, Logo } from '@/components/ui'
 import { CreditCard, Phone, Download, Printer, Share2 } from 'lucide-react'
 import { API_ORIGIN } from '@/lib/api'
-import { clientApi, isVerifiedUser, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
+import PublicText, { LANGUAGE_CHANGED } from '@/components/PublicText'
+import { clientApi, isVerifiedUser, publicCatalogueApi, readAuth, requireAuth, saveAuth } from '@/lib/client-api'
 import StarSelect from './StarSelect'
 import { earliestDate, indiaDate, recurringDates } from '@/lib/booking-dates'
 import OtpInput from './OtpInput'
@@ -106,27 +107,27 @@ function AddForm({ option, me, family, stars, onAdd, onCancel, busy, error }) {
   }
   const chip = (value, label) => <button type="button" key={value} onClick={() => choose(value)} aria-pressed={who === value} className={`rounded-full border px-3 py-1 text-sm ${who === value ? 'border-saffron-600 bg-saffron-50 font-semibold text-saffron-700' : 'border-brown-200'}`}>{label}</button>
   return <form onSubmit={event => { event.preventDefault(); onAdd({ who, devotee_name: devotee.trim(), star_value: star, service_date: date, quantity: Number(quantity), prasadam: prasadam === 'home_delivery' ? { method: prasadam, ...address, mobile: `+91${localMobile(address.mobile)}` } : { method: prasadam }, recurrence: repeat ? { frequency, count: Number(count) } : null, dates }) }} className="mt-4 space-y-4 border-t pt-4">
-    <div><p className="text-sm font-semibold">Who is this pooja for?</p><div className="mt-2 flex flex-wrap gap-2">{chip('me', `Me${self.name ? ` (${self.name})` : ''}`)}{family.map(row => chip(row.uuid, row.name))}{chip('other', 'Someone else')}</div></div>
+    <div><p className="text-sm font-semibold"><PublicText>Who is this pooja for?</PublicText></p><div className="mt-2 flex flex-wrap gap-2">{chip('me', `Me${self.name ? ` (${self.name})` : ''}`)}{family.map(row => chip(row.uuid, row.name))}{chip('other', 'Someone else')}</div></div>
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Devotee name"><Input value={devotee} onChange={event => setDevotee(event.target.value)} maxLength={160} required placeholder="Name for the sankalpam"/></Field>
+      <Field label={<PublicText>Devotee name</PublicText>}><Input value={devotee} onChange={event => setDevotee(event.target.value)} maxLength={160} required placeholder="Name for the sankalpam"/></Field>
       <Field label="Nakshatra (star)"><StarSelect stars={stars} value={star} onChange={event => setStar(event.target.value)}/></Field>
       {option.item_type === 'special_pooja'
         ? <Field label="Date"><p className="input bg-brown-50">{option.occurrence.date} · {option.occurrence.start_time?.slice(0, 5)}</p></Field>
-        : <Field label="Pooja date" hint={option.is_live ? 'Live pooja: today only, until its end time.' : `Book at least ${option.lead_time_hours || 0} hours ahead; tomorrow closes at 7:30 PM.`}><Input type="date" min={earliestDate(option)} max={option.is_live ? indiaDate() : undefined} value={date} onChange={event => setDate(event.target.value)} required/></Field>}
+        : <Field label={<PublicText>Pooja date</PublicText>} hint={option.is_live ? 'Live pooja: today only, until its end time.' : `Book at least ${option.lead_time_hours || 0} hours ahead; tomorrow closes at 7:30 PM.`}><Input type="date" min={earliestDate(option)} max={option.is_live ? indiaDate() : undefined} value={date} onChange={event => setDate(event.target.value)} required/></Field>}
       <Field label="Prasadam"><select className="input" value={prasadam} onChange={event => setPrasadam(event.target.value)}>{choices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-      <Field label="Quantity"><Input type="number" min="1" max="20" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
+      <Field label={<PublicText>Quantity</PublicText>}><Input type="number" min="1" max="20" value={quantity} onChange={event => setQuantity(event.target.value)} required/></Field>
     </div>
-    {prasadam === 'home_delivery' && <fieldset className="grid gap-3 rounded-xl border border-brown-100 p-4 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold">Delivery address</legend>
+    {prasadam === 'home_delivery' && <fieldset className="grid gap-3 rounded-xl border border-brown-100 p-4 sm:grid-cols-2"><legend className="px-1 text-sm font-semibold"><PublicText>Delivery address</PublicText></legend>
       <Field label="Recipient name"><Input value={address.recipient_name} onChange={e => setAddress(a => ({ ...a, recipient_name: e.target.value }))} maxLength={160} required/></Field>
-      <Field label="Mobile number"><Input value={address.mobile} onChange={e => setAddress(a => ({ ...a, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" pattern="[0-9]{10}" required placeholder="98765 43210"/></Field>
+      <Field label={<PublicText>Mobile number</PublicText>}><Input value={address.mobile} onChange={e => setAddress(a => ({ ...a, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" pattern="[0-9]{10}" required placeholder="98765 43210"/></Field>
       <Field label="Address" className="sm:col-span-2"><textarea className="input" rows={2} value={address.address} onChange={e => setAddress(a => ({ ...a, address: e.target.value }))} maxLength={500} required/></Field>
       <Field label="Pincode"><Input value={address.pincode} onChange={e => setAddress(a => ({ ...a, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} inputMode="numeric" pattern="[0-9]{6}" required/></Field>
       <p className="self-end text-xs text-brown-500">{option.prasadam_details?.home_delivery?.pincodes?.length ? `Delivers to ${option.prasadam_details.home_delivery.pincodes.length} pincode(s); we check yours before payment.` : 'Delivery availability is confirmed before payment.'}</p></fieldset>}
-    {canRepeat && <div className="rounded-xl border border-brown-100 p-4"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={repeat} onChange={e => setRepeat(e.target.checked)}/>Repeat this pooja (pay in advance for all dates)</label>
+    {canRepeat && <div className="rounded-xl border border-brown-100 p-4"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={repeat} onChange={e => setRepeat(e.target.checked)}/><PublicText>Repeat this pooja (pay in advance for all dates)</PublicText></label>
       {repeat && <><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="How often"><select className="input" value={frequency} onChange={e => setFrequency(e.target.value)}>{FREQUENCIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field><Field label="Number of times" hint="2 to 12, first date included"><Input type="number" min="2" max="12" value={count} onChange={e => setCount(e.target.value)} required/></Field></div>
       <p className="mt-2 text-xs text-brown-500">Dates: {dates.join(', ')}</p></>}</div>}
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-    <div className="flex gap-2"><button type="submit" disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(lineTotal)}`}</button><button type="button" disabled={busy} onClick={onCancel} className="btn-g flex-1">Cancel</button></div>
+    <div className="flex gap-2"><button type="submit" disabled={busy} className="btn-p flex-1">{busy ? 'Checking availability…' : `Add to booking · ${money(lineTotal)}`}</button><button type="button" disabled={busy} onClick={onCancel} className="btn-g flex-1"><PublicText>Cancel</PublicText></button></div>
   </form>
 }
 
@@ -162,7 +163,8 @@ export function Phase1Checkout({ mode = 'booking' }) {
     const specials = (listing?.events || []).filter(row => row.registration_mode === 'paid_booking').flatMap(event => (event.occurrences || []).filter(occurrence => occurrence.status === 'scheduled').map(occurrence => ({ ...event, uuid: occurrence.uuid, target_uuid: occurrence.uuid, item_type: 'special_pooja', occurrence, name_en: `${event.name_en} — ${occurrence.date}` })))
     return [...poojas, ...specials]
   }, [listing, mode])
-  const visible = options.filter(row => !query || `${row.name_en} ${row.name_ml || ''}`.toLowerCase().includes(query.toLowerCase()))
+  const visible = options.filter(row => !query || `${row.name_en} ${row.name_ml || ''}`.toLowerCase().includes(query.toLowerCase())
+    || row.original_name_en?.toLowerCase().includes(query.toLowerCase()))
   const total = cart.reduce((sum, row) => sum + row.amount, 0)
   const verified = isVerifiedUser(me)
   const mobileOptional = verified && !me?.mobile_verified_at
@@ -189,17 +191,42 @@ export function Phase1Checkout({ mode = 'booking' }) {
   }
 
   useEffect(() => {
+    let active = true
+    let requestedCatalogue = 0
+    let appliedCatalogue = 0
+    const getCatalogue = () => Promise.all([
+      publicCatalogueApi(`listings/${slug}`),
+      publicCatalogueApi('master-values/star').catch(() => []),
+    ])
+    const applyCatalogue = (version, [data, starRows]) => {
+      if (!active || version < appliedCatalogue) return
+      appliedCatalogue = version
+      setListing(data)
+      setStars(starRows)
+    }
+    const updateLanguage = () => {
+      const version = ++requestedCatalogue
+      getCatalogue().then(rows => applyCatalogue(version, rows)).catch(() => null)
+    }
+    window.addEventListener(LANGUAGE_CHANGED, updateLanguage)
     Promise.all([
-      clientApi(`listings/${slug}`, { auth: false }), clientApi('config', { auth: false }), clientApi('master-values/star', { auth: false }).catch(() => []),
+      getCatalogue(), clientApi('config', { auth: false }),
       readAuth()?.access ? clientApi('me').catch(() => null) : Promise.resolve(null),
       resumeCode ? clientApi(`me/bookings/${resumeCode}`) : Promise.resolve(null),
-    ]).then(([data, platform, starRows, user, resumed]) => {
-      setListing(data); setConfig(platform); setStars(starRows); setPending(resumed); applyProfile(user)
+    ]).then(([catalogue, platform, user, resumed]) => {
+      if (!active) return
+      applyCatalogue(0, catalogue)
+      setConfig(platform); setPending(resumed); applyProfile(user)
       if (mode === 'donation') {
-        const purpose = data.donation_purposes?.find(row => row.uuid === requested) || data.donation_purposes?.[0]
+        const purposes = catalogue[0].donation_purposes
+        const purpose = purposes?.find(row => row.uuid === requested) || purposes?.[0]
         setDonation(value => ({ ...value, purpose: purpose?.uuid || '', amount: purpose?.suggested_amount || '101' }))
       }
-    }).catch(err => setError(err.message))
+    }).catch(err => { if (active) setError(err.message) })
+    return () => {
+      active = false
+      window.removeEventListener(LANGUAGE_CHANGED, updateLanguage)
+    }
   }, [slug, mode, requested, resumeCode])
 
   async function addToCart(option, line) {
@@ -297,7 +324,7 @@ export function Phase1Checkout({ mode = 'booking' }) {
 
   const alert = error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>
   if (!listing) return <PublicShell booking><Wrap><p>{error || 'Loading…'}</p></Wrap></PublicShell>
-  if (pending) return <PublicShell booking><Wrap><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600">Payment pending</p><h1 className="mt-2 text-3xl font-semibold">Booking {pending.code}</h1><div className="card mt-6 space-y-3 p-6"><p>{pending.listing.name_en}</p><p className="text-sm text-brown-500">{pending.items.map(row => row.item_name_en).join(', ')} · {money(pending.amount_total)}</p><p className="text-sm text-brown-500">Complete payment before {new Date(pending.payment_deadline_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.</p>{alert}<button onClick={resumePayment} disabled={busy} className="btn-p w-full">{busy ? 'Opening Razorpay…' : `Continue payment ${money(pending.amount_total)}`}</button><Link href="/account" className="btn-g w-full">Back to account</Link></div></Wrap></PublicShell>
+  if (pending) return <PublicShell booking><Wrap><p className="text-sm font-semibold uppercase tracking-wide text-saffron-600"><PublicText>Payment pending</PublicText></p><h1 className="mt-2 text-3xl font-semibold">Booking {pending.code}</h1><div className="card mt-6 space-y-3 p-6"><p>{pending.listing.name_en}</p><p className="text-sm text-brown-500">{pending.items.map(row => row.item_name_en).join(', ')} · {money(pending.amount_total)}</p><p className="text-sm text-brown-500">Complete payment before {new Date(pending.payment_deadline_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.</p>{alert}<button onClick={resumePayment} disabled={busy} className="btn-p w-full">{busy ? 'Opening Razorpay…' : `Continue payment ${money(pending.amount_total)}`}</button><Link href="/account" className="btn-g w-full"><PublicText>Back to account</PublicText></Link></div></Wrap></PublicShell>
 
   return <PublicShell booking><main className={mode === 'booking' ? styles.bookingPage : 'mx-auto max-w-3xl px-4 py-8'}>
     <header className={mode === 'booking' ? styles.pageHeader : undefined}><h1 className="text-3xl font-semibold">{listing.name_en}</h1>
@@ -305,11 +332,11 @@ export function Phase1Checkout({ mode = 'booking' }) {
     <Stepper labels={labels} step={step} original={mode === 'booking'}/>
 
     {step === 1 && mode === 'booking' && <div className={styles.selectionStage}>
-      <section className={styles.section}><h2>Available Poojas</h2><Input placeholder="Search pooja name" value={query} onChange={event => setQuery(event.target.value)} aria-label="Search poojas"/>
+      <section className={styles.section}><h2><PublicText>Available Poojas</PublicText></h2><Input placeholder="Search pooja name" value={query} onChange={event => setQuery(event.target.value)} aria-label="Search poojas"/>
         <p className={`${styles.hint} mt-3`}>Showing {visible.length} of {options.length} poojas</p>
-      {!options.length && <p className="py-5 text-sm text-brown-500">Online booking is not available for this listing yet.</p>}
+      {!options.length && <p className="py-5 text-sm text-brown-500"><PublicText>Online booking is not available for this listing yet.</PublicText></p>}
       {visible.map(option => <article key={option.uuid} className={`${styles.poojaCard} ${editing === option.uuid ? 'ring-2 ring-saffron-300' : ''}`}>
-        <div className={styles.poojaHeader}><div><h3>{option.name_en}</h3>{option.name_ml && <p className="text-sm text-brown-500">{option.name_ml}</p>}
+        <div className={styles.poojaHeader}><div><h3>{option.name_en}</h3>{option.name_ml && (!option.original_name_en || option.name_ml !== option.name_en) && <p className="text-sm text-brown-500">{option.name_ml}</p>}
           <div className="mt-2 flex flex-wrap gap-2 text-xs">{option.is_live && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Live today</span>}{option.item_type === 'special_pooja' && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-800">Special pooja</span>}{option.lead_time_hours > 0 && !option.is_live && <span className="rounded-full bg-brown-100 px-2 py-0.5">Book {option.lead_time_hours}h ahead</span>}</div></div>
           <div className="text-right"><p className={styles.price}>{money(option.price)}</p>{editing !== option.uuid && <button type="button" disabled={busy} className="btn-g mt-2" onClick={() => { setEditing(option.uuid); setError('') }}>+ Add</button>}</div></div>
         {editing === option.uuid && <AddForm option={option} me={me} family={family} stars={stars} busy={busy} error={error} onAdd={line => addToCart(option, line)} onCancel={() => { setEditing(''); setError('') }}/>}
@@ -320,17 +347,17 @@ export function Phase1Checkout({ mode = 'booking' }) {
       </button>}
       {showSelection && <dialog id="selected-poojas-dialog" ref={selectionDialog} className={styles.selectionDialog} aria-labelledby="selected-poojas-title" onCancel={() => setShowSelection(false)} onClick={event => { if (event.target === event.currentTarget) setShowSelection(false) }}>
       <form onSubmit={continueFromChoice}>
-        <div className={styles.selectionHeader}><h2 id="selected-poojas-title">Selected Poojas</h2><button type="button" className="btn-g" aria-label="Close selected poojas" onClick={() => setShowSelection(false)}>✕</button></div>
-        {cart.length ? <ul>{cart.map(row => <li key={row.key} className={styles.summaryItem}><b>{row.name}</b><p>{row.devotee} · {row.star || 'Star not specified'}</p><p>{row.date} · Qty {row.quantity} · {money(row.amount)}</p><div className={styles.summaryActions}><button type="button" className="text-red-700 underline" aria-label={`Remove ${row.name} for ${row.devotee}`} onClick={() => setCart(rows => rows.filter(item => item.key !== row.key))}>Remove</button></div></li>)}</ul> : <p className={styles.hint}>No poojas added yet.</p>}
-        <div className={styles.total}><span>Total</span><span>{money(total)}</span></div>
-        {alert}<button className="btn-p mt-4 w-full" disabled={!cart.length || busy}>Continue Booking</button>
-        <button type="button" className="btn-g mt-2 w-full" onClick={() => setShowSelection(false)}>Add more poojas</button>
+        <div className={styles.selectionHeader}><h2 id="selected-poojas-title"><PublicText>Selected Poojas</PublicText></h2><button type="button" className="btn-g" aria-label="Close selected poojas" onClick={() => setShowSelection(false)}>✕</button></div>
+        {cart.length ? <ul>{cart.map(row => <li key={row.key} className={styles.summaryItem}><b>{row.name}</b><p>{row.devotee} · {row.star || 'Star not specified'}</p><p>{row.date} · Qty {row.quantity} · {money(row.amount)}</p><div className={styles.summaryActions}><button type="button" className="text-red-700 underline" aria-label={`Remove ${row.name} for ${row.devotee}`} onClick={() => setCart(rows => rows.filter(item => item.key !== row.key))}><PublicText>Remove</PublicText></button></div></li>)}</ul> : <p className={styles.hint}><PublicText>No poojas added yet.</PublicText></p>}
+        <div className={styles.total}><span><PublicText>Total</PublicText></span><span>{money(total)}</span></div>
+        {alert}<button className="btn-p mt-4 w-full" disabled={!cart.length || busy}><PublicText>Continue Booking</PublicText></button>
+        <button type="button" className="btn-g mt-2 w-full" onClick={() => setShowSelection(false)}><PublicText>Add more poojas</PublicText></button>
         <p className={`${styles.hint} mt-3`}>TempleAddress fee ₹0. Razorpay shows any payment-method charge before you pay.</p>
       </form></dialog>}
     </div>}
 
     {step === 1 && mode === 'donation' && <form onSubmit={continueFromChoice} className="card mt-6 space-y-4 p-6">
-      <Field label="Donation purpose"><select className="input" value={donation.purpose} onChange={event => { const purpose = options.find(row => row.uuid === event.target.value); setDonation(value => ({ ...value, purpose: event.target.value, amount: purpose?.suggested_amount || value.amount })) }} required>{options.map(row => <option key={row.uuid} value={row.uuid}>{row.name_en}</option>)}</select></Field>
+      <Field label={<PublicText>Donation purpose</PublicText>}><select className="input" value={donation.purpose} onChange={event => { const purpose = options.find(row => row.uuid === event.target.value); setDonation(value => ({ ...value, purpose: event.target.value, amount: purpose?.suggested_amount || value.amount })) }} required>{options.map(row => <option key={row.uuid} value={row.uuid}>{row.name_en}</option>)}</select></Field>
       <Field label="Amount ₹"><Input type="number" min="1" step="0.01" value={donation.amount} onChange={event => setDonation(value => ({ ...value, amount: event.target.value }))} required/></Field>
       <div className="flex flex-wrap gap-2">{[101, 251, 501, 1001].map(value => <button type="button" key={value} className="btn-g" onClick={() => setDonation(row => ({ ...row, amount: String(value) }))}>₹{value}</button>)}</div>
       <Field label="Donor name"><Input value={donation.name} onChange={event => setDonation(value => ({ ...value, name: event.target.value }))} maxLength={160} required/></Field>
@@ -340,34 +367,34 @@ export function Phase1Checkout({ mode = 'booking' }) {
 
     {step === 2 && <form onSubmit={continueFromContact} className={mode === 'booking' ? `${styles.section} ${styles.formCard} space-y-4` : 'card mt-6 space-y-4 p-6'}>
       <h2 className="text-xl font-semibold">{mode === 'booking' ? 'Devotee Information' : 'Contact details'}</h2>
-      <p className="text-sm text-brown-500">Your receipt and booking updates go to this contact.</p>
-      <Field label="Your name"><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} disabled={busy} required/></Field>
+      <p className="text-sm text-brown-500"><PublicText>Your receipt and booking updates go to this contact.</PublicText></p>
+      <Field label={<PublicText>Your name</PublicText>}><Input value={contact.name} onChange={event => setContact(value => ({ ...value, name: event.target.value }))} maxLength={160} disabled={busy} required/></Field>
       <Field label={mobileOptional ? 'Mobile number (optional)' : 'Mobile number'} hint={me?.mobile_verified_at ? 'Verified with OTP' : mobileOptional ? 'Signed in with Google. Add a number for WhatsApp/SMS booking updates.' : 'We will send an OTP to verify this number.'}><div className="flex"><span className="input w-16 shrink-0 rounded-r-none bg-brown-50 text-center">+91</span><Input value={contact.mobile} onChange={event => setContact(value => ({ ...value, mobile: event.target.value.replace(/\D/g, '').slice(0, 10) }))} inputMode="tel" disabled={Boolean(me?.mobile_verified_at) || busy} required={!mobileOptional} placeholder="98765 43210"/></div></Field>
-      {(mode !== 'booking' || !me) && <Field label="Email" hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))} disabled={busy}/></Field>}
-      {mode === 'booking' && <div><h2>Order Summary</h2><div className="flex justify-between text-sm"><span>Poojas ({cart.length})</span><span>{money(total)}</span></div><div className={styles.total}><span>Total</span><span>{money(total)}</span></div></div>}
-      {alert}<div className="flex gap-2"><button type="button" disabled={busy} className="btn-g flex-1" onClick={() => setStep(1)}>Back</button><button disabled={busy} className="btn-p flex-1">{mode === 'booking' && !verified ? (busy ? 'Sending OTP…' : 'Send OTP & continue') : 'Continue'}</button></div>
+      {(mode !== 'booking' || !me) && <Field label={<PublicText>Email</PublicText>} hint="Optional, for the receipt"><Input type="email" value={contact.email} onChange={event => setContact(value => ({ ...value, email: event.target.value }))} disabled={busy}/></Field>}
+      {mode === 'booking' && <div><h2><PublicText>Order Summary</PublicText></h2><div className="flex justify-between text-sm"><span>Poojas ({cart.length})</span><span>{money(total)}</span></div><div className={styles.total}><span><PublicText>Total</PublicText></span><span>{money(total)}</span></div></div>}
+      {alert}<div className="flex gap-2"><button type="button" disabled={busy} className="btn-g flex-1" onClick={() => setStep(1)}><PublicText>Back</PublicText></button><button disabled={busy} className="btn-p flex-1">{mode === 'booking' && !verified ? (busy ? 'Sending OTP…' : 'Send OTP & continue') : 'Continue'}</button></div>
     </form>}
 
     {step === 3 && <form onSubmit={verifyOtp} className={mode === 'booking' ? `${styles.section} ${styles.formCard} ${styles.verify} space-y-4` : 'card mt-6 space-y-4 p-6'}>
       {mode === 'booking' && <div className={styles.centerIcon}><Phone size={42}/></div>}
-      <h2 className="text-xl font-semibold">Verify your mobile</h2>
+      <h2 className="text-xl font-semibold"><PublicText>Verify your mobile</PublicText></h2>
       <p className="text-sm text-brown-500">+91 {contact.mobile} · New devotee accounts are created automatically.</p>
       {otp.challenge && (mode === 'booking' ? <OtpInput value={otp.code} onChange={code => setOtp(value => ({ ...value, code }))} disabled={busy} hint={otp.challenge.debug_otp ? `Local test OTP: ${otp.challenge.debug_otp}` : `Sent to ${otp.challenge.destination}`}/> : <Field label="6-digit OTP" hint={otp.challenge.debug_otp ? `Local test OTP: ${otp.challenge.debug_otp}` : `Sent to ${otp.challenge.destination}`}><Input value={otp.code} onChange={event => setOtp(value => ({ ...value, code: event.target.value.replace(/\D/g, '').slice(0, 6) }))} inputMode="numeric" autoComplete="one-time-code" required autoFocus/></Field>)}
       {alert}
       {otp.challenge ? <button disabled={busy || otp.code.length !== 6} className="btn-p w-full">{busy ? 'Verifying…' : 'Verify & continue'}</button> : <button type="button" onClick={sendOtp} disabled={busy} className="btn-p w-full">{busy ? 'Sending…' : 'Send OTP'}</button>}
       {mode === 'booking' && otp.challenge && <button type="button" disabled={busy || resendSeconds > 0} onClick={sendOtp} className="text-sm text-saffron-700 underline">{resendSeconds ? `Resend OTP in ${resendSeconds}s` : 'Resend OTP'}</button>}
-      <button type="button" className="btn-g w-full" onClick={() => { setStep(2); setOtp({ challenge: null, code: '' }) }}>Back</button>
+      <button type="button" className="btn-g w-full" onClick={() => { setStep(2); setOtp({ challenge: null, code: '' }) }}><PublicText>Back</PublicText></button>
     </form>}
 
     {step === 4 && <section className={mode === 'booking' ? `${styles.section} ${styles.formCard} space-y-4` : 'card mt-6 space-y-4 p-6'}>
-      {mode === 'booking' && <div className="text-center"><div className={styles.centerIcon}><CreditCard size={42}/></div><h2>Complete Payment</h2><p className={styles.hint}>Secure online payment checkout</p></div>}
+      {mode === 'booking' && <div className="text-center"><div className={styles.centerIcon}><CreditCard size={42}/></div><h2><PublicText>Complete Payment</PublicText></h2><p className={styles.hint}><PublicText>Secure online payment checkout</PublicText></p></div>}
       <h2 className="text-xl font-semibold">{mode === 'booking' ? 'Order Summary' : 'Summary'}</h2>
       <ul className="divide-y">{cart.map(row => <li key={row.key} className="flex justify-between gap-3 py-3 text-sm"><span><b>{row.name}</b>{mode === 'booking' && <span className="block text-brown-500">{row.date} · {row.devotee}{row.star ? ` · ${row.star}` : ''} · × {row.quantity}</span>}</span><b>{money(row.amount)}</b></li>)}</ul>
-      <div className="flex justify-between border-t pt-3 text-lg font-semibold"><span>Total</span><span>{money(total)}</span></div>
+      <div className="flex justify-between border-t pt-3 text-lg font-semibold"><span><PublicText>Total</PublicText></span><span>{money(total)}</span></div>
       <p className="text-xs text-brown-500">TempleAddress convenience fee ₹0. Razorpay may add a payment-method charge, shown in its secure window before you pay.</p>
       <p className="text-sm">{[contact.name, contact.mobile && `+91 ${contact.mobile}`, contact.email].filter(Boolean).join(' · ')}</p>
       {alert}
-      <div className="flex gap-2"><button type="button" className="btn-g flex-1" onClick={() => setStep(2)}>Back</button><button onClick={confirmAndPay} disabled={busy} className="btn-p flex-1">{busy ? 'Opening Razorpay…' : `Pay ${money(total)}`}</button></div>
+      <div className="flex gap-2"><button type="button" className="btn-g flex-1" onClick={() => setStep(2)}><PublicText>Back</PublicText></button><button onClick={confirmAndPay} disabled={busy} className="btn-p flex-1">{busy ? 'Opening Razorpay…' : `Pay ${money(total)}`}</button></div>
     </section>}
   </main></PublicShell>
 }
@@ -420,17 +447,17 @@ export function Phase1Receipt() {
     return () => { cancelled = true; window.clearTimeout(timer) }
   }, [router, bookingCode])
   return <PublicShell><main className={styles.receiptPage}>
-    <div className={styles.toolbar}><Link href="/account" className="font-semibold">Back to account</Link>{receipt && <div className="flex flex-wrap gap-2"><button className="btn-g" onClick={downloadPdf}><Download size={16}/>Download PDF</button><button className="btn-g" onClick={() => window.print()}><Printer size={16}/>Print</button><a className="btn-wa" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`TempleAddress Receipt ${receipt.number}\nBooking: ${receipt.snapshot.booking_code}\nPaid: ${receipt.snapshot.currency} ${receipt.snapshot.amount}`)}`}><Share2 size={16}/>WhatsApp</a><button className="btn-g" disabled={sharing} onClick={shareReceipt}>{sharing ? 'Preparing…' : 'Share'}</button></div>}</div>
+    <div className={styles.toolbar}><Link href="/account" className="font-semibold"><PublicText>Back to account</PublicText></Link>{receipt && <div className="flex flex-wrap gap-2"><button className="btn-g" onClick={downloadPdf}><Download size={16}/><PublicText>Download PDF</PublicText></button><button className="btn-g" onClick={() => window.print()}><Printer size={16}/><PublicText>Print</PublicText></button><a className="btn-wa" target="_blank" rel="noopener noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`TempleAddress Receipt ${receipt.number}\nBooking: ${receipt.snapshot.booking_code}\nPaid: ${receipt.snapshot.currency} ${receipt.snapshot.amount}`)}`}><Share2 size={16}/><PublicText>WhatsApp</PublicText></a><button className="btn-g" disabled={sharing} onClick={shareReceipt}>{sharing ? 'Preparing…' : 'Share'}</button></div>}</div>
     {error && <p role="alert" className="mb-4 rounded-xl bg-amber-50 p-3 text-amber-800">{error}</p>}
     {!receipt && !error && <p className="mt-5">Waiting for Razorpay confirmation…</p>}
     {receipt && <article id="booking-receipt" className={styles.receiptCard}>
-      <header className={styles.receiptBrand}><div><Logo/><h1 className="mt-3">Booking Receipt</h1><p className={styles.hint}>Receipt No: {receipt.number}</p><h2 className={styles.templeTitle}>{booking?.listing.name_en}</h2></div><span className={styles.status}>{booking?.status?.replaceAll('_', ' ')}</span></header>
-      <div className={styles.meta}><p><b>Booking Code:</b> {receipt.snapshot.booking_code}</p><p><b>Issued:</b> {new Date(receipt.issued_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p><p><b>Name:</b> {booking?.contact_name || '—'}</p><p><b>Mobile:</b> {booking?.contact_mobile || '—'}</p></div>
-      <section className={styles.receiptSection}><h2>Temple Receipt</h2><p className={styles.hint}>Booking items and amounts recorded at payment.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr><th scope="col">Item</th><th scope="col">Code</th><th scope="col">Qty</th><th scope="col">Amount</th></tr></thead><tbody>{receipt.snapshot.items?.map((row, index) => <tr key={`${row.code}:${index}`}><td>{row.name}</td><td>{row.code}</td><td>{row.quantity}</td><td>{receipt.snapshot.currency} {row.amount}</td></tr>)}</tbody></table></div><div className={styles.total}><span>Booking Amount</span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
-      {booking?.items?.length > 0 && <section className={styles.receiptSection}><h2>Current Booking Details</h2><p className={styles.hint}>Devotee and ritual details include any saved booking corrections.</p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr>{['Item', 'Name', 'Star', 'Booking Date', 'Delivery', 'Qty'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{booking.items.map(item => <tr key={item.uuid}><td>{item.item_name_en}</td><td>{item.devotee_name || '—'}</td><td>{item.star_value || '—'}</td><td>{item.service_date || '—'}{item.service_time ? ` ${item.service_time.slice(0, 5)}` : ''}</td><td>{deliveryLabel(item.prasadam_snapshot)}</td><td>{item.quantity}</td></tr>)}</tbody></table></div></section>}
-      <section className={styles.receiptSection}><h2>Payment Details</h2><div className={styles.invoiceRow}><span>Payment ID</span><b>{receipt.snapshot.provider_payment_id || '—'}</b></div><div className={styles.invoiceRow}><span>Paid on</span><span>{receipt.snapshot.paid_at ? new Date(receipt.snapshot.paid_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}</span></div><div className={styles.total}><span>Paid Amount</span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
-      <p className={`${styles.hint} mt-5`}>Official payment receipt issued by TempleAddress.</p>
+      <header className={styles.receiptBrand}><div><Logo/><h1 className="mt-3"><PublicText>Booking Receipt</PublicText></h1><p className={styles.hint}>Receipt No: {receipt.number}</p><h2 className={styles.templeTitle}>{booking?.listing.name_en}</h2></div><span className={styles.status}>{booking?.status?.replaceAll('_', ' ')}</span></header>
+      <div className={styles.meta}><p><b><PublicText>Booking Code:</PublicText></b> {receipt.snapshot.booking_code}</p><p><b><PublicText>Issued:</PublicText></b> {new Date(receipt.issued_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p><p><b><PublicText>Name:</PublicText></b> {booking?.contact_name || '—'}</p><p><b><PublicText>Mobile:</PublicText></b> {booking?.contact_mobile || '—'}</p></div>
+      <section className={styles.receiptSection}><h2><PublicText>Temple Receipt</PublicText></h2><p className={styles.hint}><PublicText>Booking items and amounts recorded at payment.</PublicText></p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr><th scope="col"><PublicText>Item</PublicText></th><th scope="col"><PublicText>Code</PublicText></th><th scope="col"><PublicText>Qty</PublicText></th><th scope="col"><PublicText>Amount</PublicText></th></tr></thead><tbody>{receipt.snapshot.items?.map((row, index) => <tr key={`${row.code}:${index}`}><td>{row.name}</td><td>{row.code}</td><td>{row.quantity}</td><td>{receipt.snapshot.currency} {row.amount}</td></tr>)}</tbody></table></div><div className={styles.total}><span><PublicText>Booking Amount</PublicText></span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
+      {booking?.items?.length > 0 && <section className={styles.receiptSection}><h2><PublicText>Current Booking Details</PublicText></h2><p className={styles.hint}><PublicText>Devotee and ritual details include any saved booking corrections.</PublicText></p><div className={styles.tableScroll}><table className={styles.itemTable}><thead><tr>{['Item', 'Name', 'Star', 'Booking Date', 'Delivery', 'Qty'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{booking.items.map(item => <tr key={item.uuid}><td>{item.item_name_en}</td><td>{item.devotee_name || '—'}</td><td>{item.star_value || '—'}</td><td>{item.service_date || '—'}{item.service_time ? ` ${item.service_time.slice(0, 5)}` : ''}</td><td>{deliveryLabel(item.prasadam_snapshot)}</td><td>{item.quantity}</td></tr>)}</tbody></table></div></section>}
+      <section className={styles.receiptSection}><h2><PublicText>Payment Details</PublicText></h2><div className={styles.invoiceRow}><span><PublicText>Payment ID</PublicText></span><b>{receipt.snapshot.provider_payment_id || '—'}</b></div><div className={styles.invoiceRow}><span><PublicText>Paid on</PublicText></span><span>{receipt.snapshot.paid_at ? new Date(receipt.snapshot.paid_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}</span></div><div className={styles.total}><span><PublicText>Paid Amount</PublicText></span><span>{receipt.snapshot.currency} {receipt.snapshot.amount}</span></div></section>
+      <p className={`${styles.hint} mt-5`}><PublicText>Official payment receipt issued by TempleAddress.</PublicText></p>
     </article>}
-    {receipt && booking?.listing.slug && <div className="mt-5 flex flex-wrap gap-3"><Link href={`/${booking.items.every(item => item.item_type === 'donation') ? 'donate' : 'book'}/${booking.listing.slug}`} className="btn-p">Book again</Link><Link href="/temples" className="btn-g">View temples</Link></div>}
+    {receipt && booking?.listing.slug && <div className="mt-5 flex flex-wrap gap-3"><Link href={`/${booking.items.every(item => item.item_type === 'donation') ? 'donate' : 'book'}/${booking.listing.slug}`} className="btn-p"><PublicText>Book again</PublicText></Link><Link href="/temples" className="btn-g"><PublicText>View temples</PublicText></Link></div>}
   </main></PublicShell>
 }

@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 
 import EventRegistration from '@/components/phase1/EventRegistration'
-import { apiFetch } from '@/lib/api'
+import { publicContentFetch } from '@/lib/public-content-server'
+import { displayContent } from '@/lib/content-language'
 import { staticParams } from '@/lib/catalogue'
 
 // Pre-rendered at build and refreshed every five minutes; new events render on first visit.
@@ -13,7 +14,7 @@ export function generateStaticParams() {
 }
 
 async function load(slug) {
-  try { return await apiFetch(`events/${encodeURIComponent(slug)}`) }
+  try { return await publicContentFetch(`events/${encodeURIComponent(slug)}`) }
   catch (error) { if (error.status === 404) notFound(); throw error }
 }
 
@@ -27,5 +28,5 @@ export default async function Page({ params }) {
   const { slug } = await params
   const event = await load(slug)
   const schema = { '@context': 'https://schema.org', '@type': 'Event', name: event.name_en, description: event.description_en, url: `https://templeaddress.com/events/${event.slug}`, location: { '@type': 'Place', name: event.host_listing?.name_en } }
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}/><EventRegistration event={event}/></>
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}/><EventRegistration event={displayContent(event)}/></>
 }

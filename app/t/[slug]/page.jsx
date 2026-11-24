@@ -1,20 +1,15 @@
 import { notFound } from 'next/navigation'
 import { ListingDetail } from '@/components/phase1/Public'
-import { getListing } from '@/lib/api'
-import { staticParams } from '@/lib/catalogue'
+import { publicContentFetch } from '@/lib/public-content-server'
+import { displayContent } from '@/lib/content-language'
 import { JsonLd, SITE_URL, breadcrumbSchema, listingSharing } from '@/lib/seo'
 
-// Pre-rendered at build and refreshed every five minutes; new temples render on first visit.
-export const revalidate = 300
-export const dynamicParams = true
-
-export function generateStaticParams() {
-  return staticParams('listings?type=temple', row => ({ slug: row.slug }))
-}
+// The selected language comes from a request cookie.
+export const dynamic = 'force-dynamic'
 
 // Runs before anything is streamed, so a missing temple answers HTTP 404 instead of 200.
 async function load(slug) {
-  try { return await getListing(slug) } catch (error) {
+  try { return await publicContentFetch(`listings/${encodeURIComponent(slug)}`) } catch (error) {
     if (error.status === 404) notFound()
     console.error('Public listing API request failed', error.status || 'network')
     throw error
@@ -37,5 +32,5 @@ export default async function Page({ params }) {
     description: listing.seo_description || listing.short_description_en || undefined, url: `${SITE_URL}/t/${listing.slug}`, ...(listing.cover ? { image: listing.cover } : {}),
     ...(listing.address || listing.district ? { address: { '@type': 'PostalAddress', streetAddress: listing.address || undefined, addressLocality: listing.district?.name_en || listing.district_name || undefined, postalCode: listing.pincode || undefined, addressCountry: 'IN' } } : {}),
   }
-  return <><JsonLd schema={schema}/><JsonLd schema={breadcrumbSchema([['Home', '/'], ['Temples', '/temples'], [listing.name_en, `/t/${listing.slug}`]])}/><ListingDetail listing={listing}/></>
+  return <><JsonLd schema={schema}/><JsonLd schema={breadcrumbSchema([['Home', '/'], ['Temples', '/temples'], [listing.name_en, `/t/${listing.slug}`]])}/><ListingDetail listing={displayContent(listing)}/></>
 }
