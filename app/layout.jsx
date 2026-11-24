@@ -59,7 +59,7 @@ export default function RootLayout({ children }) {
   const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
   const productionAnalytics = process.env.NODE_ENV === 'production'
     && process.env.NEXT_PUBLIC_APP_ENV === 'production'
-    && measurementId
+    && /^G-[A-Z0-9]+$/.test(measurementId ?? '')
   return (
     <html
       lang="en"
@@ -68,7 +68,6 @@ export default function RootLayout({ children }) {
     >
       <body className="bg-brown-50 text-brown-900 antialiased">
         <DemoPortalGate>{children}</DemoPortalGate>
-        {/* Collection stays off until a consent control supplies the visitor's choice. */}
         {productionAnalytics && <SiteAnalytics measurementId={measurementId} />}
       </body>
     </html>

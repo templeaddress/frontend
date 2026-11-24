@@ -31,7 +31,15 @@ function PoojaRow({ listing, pooja, reload }) {
     for (const field of ['start_time', 'end_time', 'available_from', 'available_to']) if (!values[field]) values[field] = null
     await action(() => clientApi(root, { method: 'PATCH', body: values }))
   }
-  return <div className="rounded-xl border p-4"><div className="flex flex-wrap items-center justify-between gap-3"><span className="font-semibold">{pooja.name_en} · ₹{pooja.price} · {pooja.is_active ? 'Active' : 'Inactive'}</span><button className="btn-g" onClick={() => details ? setDetails(null) : open()}>{details ? 'Close' : 'Manage schedule'}</button></div>
+  async function changeAvailability() {
+    const isActive = !pooja.is_active
+    if (!isActive && !window.confirm(`Remove "${pooja.name_en}" from the public catalogue and stop new bookings? Existing bookings will be kept.`)) return
+    await action(() => clientApi(root, { method: 'PATCH', body: { is_active: isActive } }))
+  }
+  return <div className="rounded-xl border p-4"><div className="flex flex-wrap items-center justify-between gap-3"><span className="font-semibold">{pooja.name_en} · ₹{pooja.price} · {pooja.is_active ? 'Active' : 'Inactive'}</span><div className="flex flex-wrap gap-2">
+      <button type="button" className="btn-g" disabled={busy} onClick={() => details ? setDetails(null) : open()}>{details ? 'Close' : 'Manage schedule'}</button>
+      <button type="button" className="btn-g" disabled={busy} onClick={changeAvailability}>{pooja.is_active ? 'Remove pooja' : 'Restore pooja'}</button>
+    </div></div>
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
     {details && <div className="mt-4 space-y-4"><form onSubmit={save} className="grid gap-3 md:grid-cols-3">
       <Field label="Name"><Input name="name_en" defaultValue={details.name_en} required/></Field>
