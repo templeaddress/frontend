@@ -12,10 +12,12 @@ import {
 import { clientApi, readAuth } from '@/lib/client-api'
 import { PublicShell } from '@/components/ui'
 import PublicText from '@/components/PublicText'
-import { useDemoPortals } from '@/components/DemoPortalGate'
 import { listingPath, openingText } from '@/lib/catalogue'
 import { AppointmentPanel, ClaimPanel, SponsorPanel } from './ListingPhase2'
 
+import { useDemoPortals } from '@/components/DemoPortalGate'
+
+const tabKeys = ['basic', 'details', 'contact', 'donations', 'poojas']
 const tabs = ['Basic Info', 'Details', 'Contact', 'Donations', 'Poojas']
 
 function Fact({ label, value }) {
@@ -135,7 +137,25 @@ function EnquiryForm({ listing }) {
 
 export default function ListingDetailClient({ listing }) {
   const demoPortals = useDemoPortals()
+  const showNearby = demoPortals || (listing.listing_type === 'temple' && Boolean(listing.nearby_places?.length))
   const [tab, setTab] = useState(0)
+  useEffect(() => {
+    function restoreTab() {
+      const key = new URL(window.location.href).searchParams.get('tab')
+      setTab(Math.max(0, tabKeys.indexOf(key)))
+    }
+    restoreTab()
+    window.addEventListener('popstate', restoreTab)
+    return () => window.removeEventListener('popstate', restoreTab)
+  }, [listing.slug])
+
+  function selectTab(index) {
+    const url = new URL(window.location.href)
+    if (index) url.searchParams.set('tab', tabKeys[index])
+    else url.searchParams.delete('tab')
+    window.history.replaceState(null, '', url)
+    setTab(index)
+  }
   const gallery = listing.gallery || []
   const hero = listing.cover || gallery[0]?.url
   const profile = listing.temple_profile || {}
@@ -168,7 +188,7 @@ export default function ListingDetailClient({ listing }) {
       </div>
     </section>
 
-    <nav className="sticky top-16 z-20 -mx-4 mt-4 overflow-x-auto bg-brown-50/95 px-4 py-3 backdrop-blur" aria-label="Listing sections"><div className="flex min-w-max gap-2">{tabs.map((name, index) => <button type="button" key={name} onClick={() => setTab(index)} className={`btn !rounded-full !py-2 ${tab === index ? 'bg-brown-900 text-white' : 'border border-brown-200 bg-white text-brown-800'}`}><PublicText>{name}</PublicText></button>)}</div></nav>
+    <nav className="sticky top-16 z-20 -mx-4 mt-4 overflow-x-auto bg-brown-50/95 px-4 py-3 backdrop-blur" aria-label="Listing sections"><div className="flex min-w-max gap-2">{tabs.map((name, index) => <button type="button" key={name} onClick={() => selectTab(index)} aria-pressed={tab === index} className={`btn !rounded-full !py-2 ${tab === index ? 'bg-brown-900 text-white' : 'border border-brown-200 bg-white text-brown-800'}`}><PublicText>{name}</PublicText></button>)}</div></nav>
 
     <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-6">
@@ -178,7 +198,7 @@ export default function ListingDetailClient({ listing }) {
           {listing.festival_profile && <section className="card p-5"><h2 className="text-xl font-semibold"><PublicText>Festival details</PublicText></h2><dl className="mt-3 grid gap-4 sm:grid-cols-2"><Fact label="Organiser" value={listing.festival_profile.organiser}/><Fact label="Venue" value={listing.festival_profile.venue}/><Fact label="Starts" value={listing.festival_profile.start_date}/><Fact label="Ends" value={listing.festival_profile.end_date}/></dl><h3 className="mt-5 font-semibold"><PublicText>Programme</PublicText></h3>{listing.programmes?.map((row, index) => <p key={index} className="mt-3 border-t pt-3">{row.date} {row.start_time} · {row.name_en} {row.performer}</p>)}</section>}
           <section className="card p-5"><h2 className="font-semibold"><PublicText>Basic details</PublicText></h2><dl className="mt-4 grid gap-5 sm:grid-cols-2"><Fact label="Name (English)" value={listing.original_name_en ?? listing.name_en}/><Fact label="Name (Malayalam)" value={listing.name_ml}/><Fact label={`${listingLabel} code`} value={listing.code}/><Fact label="Category" value={listing.category?.name_en}/><Fact label="Main deity" value={profile.main_deity || listing.main_deity}/><Fact label="District" value={listing.district?.name_en}/><Fact label="Opening hours" value={hours}/><Fact label="Pincode" value={listing.pincode}/></dl></section>
           {(listing.speciality || listing.guidelines) && <section className="grid gap-4 sm:grid-cols-2">{listing.speciality && <div className="card p-5"><h3 className="font-semibold"><PublicText>Speciality</PublicText></h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.speciality}</p></div>}{listing.guidelines && <div className="card p-5"><h3 className="font-semibold"><PublicText>Visitor guidelines</PublicText></h3><p className="mt-2 text-sm leading-6 text-brown-700">{listing.guidelines}</p></div>}</section>}
-          <section className={`grid gap-6 ${demoPortals ? 'sm:grid-cols-2' : ''}`}><div className="card p-5"><h3 className="font-semibold"><PublicText>Deities</PublicText></h3><div className="mt-3 flex flex-wrap gap-2">{(profile.main_deity || listing.main_deity) && !(listing.deities || []).some(deity => deity.is_primary || deity.name_en === (profile.main_deity || listing.main_deity)) && <span className="pill bg-saffron-50 text-saffron-700">{profile.main_deity || listing.main_deity} ? main</span>}{(listing.deities || []).map(deity => <span key={deity.code} className={`pill ${deity.is_primary ? 'bg-saffron-50 text-saffron-700' : 'bg-brown-100 text-brown-700'}`}>{deity.name_en}{deity.is_primary ? ' · main' : ''}</span>)}</div></div>{demoPortals && <div className="card p-5"><h3 className="font-semibold"><PublicText>Nearby places</PublicText></h3>{listing.nearby_places?.length ? <ul className="mt-3 space-y-2 text-sm">{listing.nearby_places.map(place => <li key={place.name_en} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-600"/><span>{place.name_en}{place.distance_km ? ` · ${place.distance_km} km` : ''}</span></li>)}</ul> : <p className="mt-2 text-sm text-brown-500"><PublicText>Nearby places have not been published.</PublicText></p>}</div>}</section>
+          <section className={`grid gap-6 ${showNearby ? 'sm:grid-cols-2' : ''}`}><div className="card p-5"><h3 className="font-semibold"><PublicText>Deities</PublicText></h3><div className="mt-3 flex flex-wrap gap-2">{(profile.main_deity || listing.main_deity) && !(listing.deities || []).some(deity => deity.is_primary || deity.name_en === (profile.main_deity || listing.main_deity)) && <span className="pill bg-saffron-50 text-saffron-700">{profile.main_deity || listing.main_deity} ? main</span>}{(listing.deities || []).map(deity => <span key={deity.code} className={`pill ${deity.is_primary ? 'bg-saffron-50 text-saffron-700' : 'bg-brown-100 text-brown-700'}`}>{deity.name_en}{deity.is_primary ? ' · main' : ''}</span>)}</div></div>{showNearby && <div className="card p-5"><h3 className="font-semibold"><PublicText>Nearby places</PublicText></h3>{listing.nearby_places?.length ? <ul className="mt-3 space-y-2 text-sm">{listing.nearby_places.map(place => <li key={place.name_en} className="flex gap-2"><MapPin size={14} className="mt-1 shrink-0 text-saffron-600"/><span>{place.name_en}{place.distance_km != null ? ` · ${place.distance_km} km` : ''}</span></li>)}</ul> : <p className="mt-2 text-sm text-brown-500"><PublicText>Nearby places have not been published.</PublicText></p>}</div>}</section>
           <Gallery images={gallery} listingName={listing.name_en}/>
         </>}
 

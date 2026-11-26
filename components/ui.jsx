@@ -8,7 +8,7 @@
  *   - usePathname from next/navigation (replaces useLocation)
  *   - LanguageControl from @/components/LanguageControl
  */
-import { Suspense, useCallback, useState, useEffect, useSyncExternalStore } from 'react'
+import { Suspense, useCallback, useRef, useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import ActiveLink from './ActiveLink'
@@ -324,6 +324,12 @@ export function Chatbot() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [q, setQ] = useState(''), [language, setLanguage] = useState('en')
   const [msgs, setMsgs] = useState([]), [suggestions, setSuggestions] = useState([])
+  const conversation = useRef(null)
+  const followLatest = useRef(true)
+  useEffect(() => {
+    const panel = conversation.current
+    if (open && panel && followLatest.current) panel.scrollTop = panel.scrollHeight
+  }, [open, msgs, busy, suggestions])
   const slug = pathname?.match(/^\/t\/([^/]+)/)?.[1] || ''
   useEffect(() => {
     if (!open || msgs.length) return
@@ -331,6 +337,7 @@ export function Chatbot() {
   }, [open, language, msgs.length])
   const ask = useCallback(async text => {
     const t = (text || q).trim(); if (!t || busy) return
+    followLatest.current = true
     setMsgs(m => [...m, { me: true, t }]); setQ(''); setBusy(true)
     try {
       const data = await clientApi('assistant', { method: 'POST', auth: false, body: { message: t, language, listing_slug: slug } })
@@ -355,7 +362,10 @@ export function Chatbot() {
             <button onClick={() => { setLanguage(l => l === 'en' ? 'ml' : 'en'); setMsgs([]) }} className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[11px]" aria-label="Switch language">{language === 'en' ? 'മലയാളം' : 'English'}</button>
             <button onClick={() => setOpen(false)} className="ml-1 rounded p-0.5 hover:bg-white/10" aria-label="Close chat"><X size={14}/></button>
           </div>
-          <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm" aria-live="polite">
+          <div ref={conversation} onScroll={event => {
+            const panel = event.currentTarget
+            followLatest.current = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 48
+          }} className="flex-1 space-y-2 overflow-y-auto p-3 text-sm" aria-live="polite">
             {msgs.map((m, i) => <div key={i} className={`max-w-[85%] rounded-2xl px-3 py-2 ${m.me ? 'ml-auto bg-saffron-500 text-white' : 'bg-brown-50'}`}>{m.t}{m.listing && <Link href={`/t/${m.listing.slug}`} className="mt-1 block text-xs font-semibold text-saffron-700">Open {m.listing.name_en}</Link>}{m.handoff && <Link href="/support" className="mt-1 block text-xs font-semibold text-saffron-700">Raise a support ticket</Link>}</div>)}
             {busy && <div className="w-fit rounded-2xl bg-brown-50 px-3 py-2 text-brown-500">…</div>}
             <div className="flex flex-wrap gap-1 pt-1">
