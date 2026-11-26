@@ -57,7 +57,7 @@ export default function SiteAnalytics({ measurementId }) {
   const detail = detailPages.find(([pattern]) => pattern.test(pathname || ''))
   const pageTitle = publicPages.get(pathname) || detail?.[2]
   const pagePath = detail?.[1] || pathname
-  const enabled = productionHost && choice === 'granted' && Boolean(pageTitle)
+  const enabled = productionHost && (choice === 'unset' || choice === 'granted') && Boolean(pageTitle)
 
   useEffect(() => {
     setProductionHost(['templeaddress.com', 'www.templeaddress.com'].includes(window.location.hostname))
@@ -66,7 +66,7 @@ export default function SiteAnalytics({ measurementId }) {
     function syncChoice(event) {
       if (event.key !== CONSENT_KEY && event.key !== null) return
       const next = storedChoice()
-      if (next !== 'granted') Reflect.set(window, disableKey, true)
+      if (next === 'denied') Reflect.set(window, disableKey, true)
       setChoice(next)
     }
     window.addEventListener('storage', syncChoice)
@@ -82,7 +82,15 @@ export default function SiteAnalytics({ measurementId }) {
     }
 
     Reflect.set(window, disableKey, false)
-    if (!ready || lastPath.current === pathname) return
+    if (!ready) return
+
+    if (!initialized.current) {
+      gtag('consent', 'default', denied)
+      gtag('js', new Date())
+      initialized.current = true
+    }
+    gtag('consent', 'update', choice === 'granted' ? { ...denied, analytics_storage: 'granted' } : denied)
+    if (lastPath.current === pathname) return
 
     const page = {
       page_location: new URL(pagePath, 'https://templeaddress.com').href,
@@ -90,21 +98,15 @@ export default function SiteAnalytics({ measurementId }) {
       page_referrer: '',
       ignore_referrer: true,
     }
-    if (!initialized.current) {
-      gtag('consent', 'default', denied)
-      gtag('js', new Date())
-    }
-    gtag('consent', 'update', { ...denied, analytics_storage: 'granted' })
     gtag('config', measurementId, {
       ...page,
       send_page_view: false,
       allow_google_signals: false,
       allow_ad_personalization_signals: false,
     })
-    initialized.current = true
     lastPath.current = pathname
     gtag('event', 'page_view', { ...page, send_to: measurementId })
-  }, [disableKey, enabled, measurementId, pagePath, pageTitle, pathname, ready])
+  }, [choice, disableKey, enabled, measurementId, pagePath, pageTitle, pathname, ready])
 
   function selectChoice(next) {
     if (next === 'denied') Reflect.set(window, disableKey, true)
@@ -123,9 +125,13 @@ export default function SiteAnalytics({ measurementId }) {
     />}
     <section aria-label="Analytics preferences" className="border-t border-brown-200 bg-brown-50 px-4 py-4 text-sm text-brown-900">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
-        <p>Optional analytics help us understand how visitors use TempleAddress.</p>
-        <button type="button" className="btn-g !py-1.5" aria-pressed={choice === 'granted'} onClick={() => selectChoice('granted')}>Allow analytics</button>
-        <button type="button" className="btn-g !py-1.5" aria-pressed={choice === 'denied'} onClick={() => selectChoice('denied')}>Decline analytics</button>
+        <p>Google Analytics receives limited measurements without cookies before you choose. Allow enables analytics cookies. Decline stops measurement.</p>
+        <button type="button" className="btn-g cursor-pointer !py-1.5 aria-pressed:border-brown-600 aria-pressed:bg-brown-100" aria-pressed={choice === 'granted'} onClick={() => selectChoice('granted')}>Allow analytics</button>
+        <button type="button" className="btn-g cursor-pointer !py-1.5 aria-pressed:border-brown-600 aria-pressed:bg-brown-100" aria-pressed={choice === 'denied'} onClick={() => selectChoice('denied')}>Decline analytics</button>
+        <span role="status">
+          {choice === 'granted' && 'Analytics allowed.'}
+          {choice === 'denied' && 'Analytics declined.'}
+        </span>
       </div>
     </section>
   </>
