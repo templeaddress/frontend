@@ -22,6 +22,7 @@ const copy = {
   privacy: [
     'TempleAddress uses account, contact, devotee and ritual details only to operate listings, bookings, receipts, notifications and support.',
     'Public pages mask official contacts. Full contact details are available only after an authenticated reveal and are protected by rate limits and audit logs.',
+    'TempleAddress uses Google Analytics 4 to understand how visitors use selected public pages. Before you choose an analytics preference, Google may receive limited measurements, such as page views, without analytics cookies. You can manage your choice using the analytics controls below the homepage footer.',
   ],
   data: [
     'Booking, payment, receipt, chart and payout records are retained as linked operational and audit records.',
@@ -38,6 +39,7 @@ const copy = {
   cookie: [
     'TempleAddress uses essential browser storage and cookies for authentication, security and session continuity.',
     'Optional analytics or marketing storage must not be enabled without the applicable notice and consent controls.',
+    'Google Analytics may receive limited measurements without analytics cookies before you choose. Select Allow analytics to let Google Analytics use analytics cookies, or select Decline analytics to stop future analytics measurement. TempleAddress saves your preference in your browser. You can change it using the analytics controls below the homepage footer.',
   ],
 }
 
