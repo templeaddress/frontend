@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CONTENT_LANGUAGES, CONTENT_TRANSLATION_ENABLED, LANGUAGE_COOKIE, validLanguage } from '@/lib/content-language'
+import { AVAILABLE_CONTENT_LANGUAGES, CONTENT_TRANSLATION_ENABLED, LANGUAGE_COOKIE, validLanguage } from '@/lib/content-language'
 import { publicLabel } from '@/lib/public-labels'
 import PublicText, { LANGUAGE_CHANGED, useContentLanguage } from './PublicText'
 
@@ -96,7 +96,7 @@ function CloudLanguageControl() {
     </summary>
     <div className="absolute right-0 z-50 mt-2 w-64 rounded-xl bg-white p-4 text-brown-900 shadow-xl">
       <ul className="grid grid-cols-2 gap-1" aria-label={label}>
-        {Object.entries(CONTENT_LANGUAGES).map(([value, name]) => <li key={value}>
+        {Object.entries(AVAILABLE_CONTENT_LANGUAGES).map(([value, name]) => <li key={value}>
           <button type="button" lang={value} aria-pressed={language === value} onClick={() => choose(value)}
             className={`w-full rounded-lg px-2 py-1.5 text-left hover:bg-brown-50 ${language === value ? 'bg-brown-100 font-semibold' : ''}`}>{name}</button>
         </li>)}
