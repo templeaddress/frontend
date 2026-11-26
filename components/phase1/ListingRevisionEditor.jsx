@@ -21,17 +21,25 @@ function Rows({ title, fields, value, onChange }) {
   return <div className="space-y-3 md:col-span-2"><h3 className="font-semibold">{title}</h3>{value.map((row, index) => <div key={index} className="grid gap-3 rounded-xl border p-3 md:grid-cols-2">{fields.map(([key, label, type = 'text']) => <Field key={key} label={label}><Input type={type} step={type === 'number' ? 'any' : undefined} value={row[key] ?? ''} onChange={event => onChange(value.map((item, i) => i === index ? { ...item, [key]: event.target.value } : item))}/></Field>)}<button type="button" className="btn-g" onClick={() => onChange(value.filter((_, i) => i !== index))}>Remove row</button></div>)}<button type="button" className="btn-g" onClick={() => onChange([...value, {}])}>Add {title.toLowerCase()} row</button></div>
 }
 
-function MainDeityField({ value, options }) {
+function MainDeityField({ value, options, error, onEdit }) {
   const matching = options.find(row => [row.name_en, row.name_ml].some(name => name?.trim().toLowerCase() === value.trim().toLowerCase()))
   const [choice, setChoice] = useState(matching ? matching.code : value ? '__other__' : '')
   const [customName, setCustomName] = useState(matching ? '' : value)
   const selected = options.find(row => row.code === choice)
-  return <Field label="Main deity"><select className="input" value={choice} onChange={event => setChoice(event.target.value)}><option value="">Choose a deity</option>{options.map(row => <option key={row.code} value={row.code}>{row.name_en}</option>)}<option value="__other__">Other</option></select>{choice === '__other__' ? <Input className="input mt-2" name="main_deity" value={customName} onChange={event => setCustomName(event.target.value)} placeholder="Enter deity name" maxLength={160} required/> : <input type="hidden" name="main_deity" value={selected ? (matching?.code === selected.code ? value : selected.name_en) : ''}/>}</Field>
+  return <Field label="Main deity"><select data-main-deity className="input" aria-invalid={Boolean(error)} value={choice} onChange={event => { setChoice(event.target.value); onEdit() }}><option value="">Choose a deity</option>{options.map(row => <option key={row.code} value={row.code}>{row.name_en}</option>)}<option value="__other__">Other</option></select>{choice === '__other__' ? <Input className="input mt-2" name="main_deity" value={customName} onChange={event => { setCustomName(event.target.value); onEdit() }} aria-invalid={Boolean(error)} placeholder="Enter deity name" maxLength={160} required/> : <input type="hidden" name="main_deity" value={selected ? (matching?.code === selected.code ? value : selected.name_en) : ''}/>}<span className={error ? 'text-sm text-red-700' : 'text-sm text-brown-500'} role={error ? 'alert' : undefined}>{error || 'Save the Details section after changing the main deity.'}</span></Field>
 }
 
 export default function ListingRevisionEditor({ listing, revision, onChange, readOnly = false }) {
   const [feedback, setFeedback] = useState(null), [preview, setPreview] = useState('')
   const imageInput = useRef(null)
+  const detailsForm = useRef(null)
+  const [deityError, setDeityError] = useState('')
+
+  function showDeityError(message) {
+    setDeityError(message)
+    const field = detailsForm.current?.querySelector('input[name="main_deity"]:not([type="hidden"]), [data-main-deity]')
+    field?.focus()
+  }
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
   const [media, setMedia] = useState([]), [documents, setDocuments] = useState([]), [masters, setMasters] = useState({})
@@ -64,6 +72,10 @@ export default function ListingRevisionEditor({ listing, revision, onChange, rea
       try { await onChange() } catch (err) { setError(`Saved, but could not refresh: ${err.message}`) }
     } catch (err) {
       const message = loginErrorMessage(err)
+      if (listing.listing_type === 'temple' && /main_deity/i.test(message)) {
+        showDeityError('Choose a main deity and save the Details section before submitting.')
+        return
+      }
       if (showFeedback) setFeedback({ ok: false, message: message || 'Please try again.' })
       else setError(message)
     } finally { setBusy(false) }
@@ -77,6 +89,14 @@ export default function ListingRevisionEditor({ listing, revision, onChange, rea
     if (section === 'details') {
       const detailFields = Object.fromEntries(sections.details.map(([key]) => [key, values[key]]))
       const specific = Object.fromEntries(profiles[listing.listing_type].map(([key]) => [key, values[key]]))
+      if (listing.listing_type === 'temple') {
+        specific.main_deity = String(specific.main_deity || '').trim()
+        if (!specific.main_deity) {
+          showDeityError('Choose a main deity or enter a name under Other.')
+          return
+        }
+        setDeityError('')
+      }
       if (listing.listing_type === 'temple') specific.opening_periods = ['Morning', 'Evening'].flatMap(label => values[`${label}_opens`] || values[`${label}_closes`] ? [{ label, opens: values[`${label}_opens`], closes: values[`${label}_closes`] }] : [])
       if (listing.listing_type === 'service') { specific.languages = (specific.languages || '').split(',').map(x => x.trim()).filter(Boolean); specific.experience_years = Number(specific.experience_years || 0) }
       if (listing.listing_type === 'festival') for (const key of ['start_date', 'end_date']) specific[key] ||= null
@@ -86,6 +106,17 @@ export default function ListingRevisionEditor({ listing, revision, onChange, rea
       if (listing.listing_type === 'service') change.service_offerings = offerings.map(row => ({ ...row, indicative_price_amount: row.indicative_price_amount || null }))
     }
     await action(() => clientApi(`${root}/revision`, { method: 'PATCH', body: { snapshot: change, sections_completed: [...new Set([...(revision.sections_completed || []), section])].slice(-6) } }), true)
+  }
+  function submitSavedSections() {
+    if (listing.listing_type === 'temple') {
+      if (!masters.deity || !detailsForm.current) return
+      const deity = String(new FormData(detailsForm.current).get('main_deity') || '').trim()
+      if (!deity || deity !== (profile.main_deity || '').trim()) {
+        showDeityError(deity ? 'Save the Details section to apply this main deity before submitting.' : 'Choose a main deity and save the Details section before submitting.')
+        return
+      }
+    }
+    action(() => clientApi(`${root}/submit`, { method: 'POST', body: {} }))
   }
   async function upload(event, kind) {
     event.preventDefault(); const element = event.currentTarget; const data = new FormData(element)
@@ -98,15 +129,15 @@ export default function ListingRevisionEditor({ listing, revision, onChange, rea
     {feedback && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" role="alertdialog" aria-modal="true" aria-labelledby="save-feedback-title"><div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"><h2 id="save-feedback-title" className="text-xl font-semibold">{feedback.ok ? 'Saved' : 'Could not save'}</h2><p className="mt-3 text-sm">{feedback.message}</p><button type="button" autoFocus className="btn-p mt-5" onClick={() => setFeedback(null)}>OK</button></div></div>}
     <div className="card p-5"><h2 className="text-xl font-semibold">Listing content and staff review</h2><p className="mt-2 text-sm">Revision: {revision?.status || 'No open draft'} · {revision?.scope === 'public_content' ? 'Public content proposal' : 'Listing submission'}</p>{revision?.review_notes && <p className="mt-3 rounded-xl bg-amber-50 p-3">Staff feedback: {revision.review_notes}</p>}{!readOnly && revision && !editable && revision.status !== 'submitted' && <button disabled={busy} className="btn-p mt-3" onClick={() => action(() => clientApi(`${root}/revision/new`, { method: 'POST', body: {} }))}>Start a new revision</button>}{!readOnly && !revision && <button className="btn-p mt-3" disabled={busy} onClick={() => action(() => clientApi(`${root}/revision/new`, { method: 'POST', body: {} }))}>Create revision</button>}<p className="mt-3 text-sm text-brown-500">Saved edits become public after staff approval. Submission does not grant ownership or vendor access.</p></div>
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}{notice && <p role="status" className="rounded-xl bg-emerald-50 p-3">{notice}</p>}
-    {editable && Object.entries(sections).filter(([section]) => section !== 'contact' || revision.can_access_private).map(([section, fields]) => <form key={`${revision.uuid}-${section}`} onSubmit={event => save(event, section)} className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="text-lg font-semibold capitalize md:col-span-2">{section}</h3>{fields.map(([key, label]) => <Field label={label} key={key}>{section === 'details' || key.includes('description') || key === 'address' ? <textarea className="input" name={key} defaultValue={(section === 'contact' ? snapshot.contact : snapshot)?.[key] || ''} rows={3}/> : <Input name={key} defaultValue={(section === 'contact' ? snapshot.contact : snapshot)?.[key] || ''}/>}</Field>)}
+    {editable && Object.entries(sections).filter(([section]) => section !== 'contact' || revision.can_access_private).map(([section, fields]) => <form ref={section === 'details' ? detailsForm : undefined} key={`${revision.uuid}-${section}`} onSubmit={event => save(event, section)} className="card grid gap-4 p-5 md:grid-cols-2"><h3 className="text-lg font-semibold capitalize md:col-span-2">{section}</h3>{fields.map(([key, label]) => <Field label={label} key={key}>{section === 'details' || key.includes('description') || key === 'address' ? <textarea className="input" name={key} defaultValue={(section === 'contact' ? snapshot.contact : snapshot)?.[key] || ''} rows={3}/> : <Input name={key} defaultValue={(section === 'contact' ? snapshot.contact : snapshot)?.[key] || ''}/>}</Field>)}
       {section === 'location' && ['category', 'district'].map(kind => <Field key={kind} label={kind === 'category' ? 'Category' : 'District'}><select name={kind} defaultValue={snapshot[kind] || ''} className="input"><option value="">Choose {kind}</option>{(masters[kind] || []).map(row => <option key={row.code} value={row.code}>{row.name_en}</option>)}</select></Field>)}
-      {section === 'details' && <>{profiles[listing.listing_type].map(([key, label, type = 'text']) => key === 'main_deity' ? (masters.deity && <MainDeityField key={`${revision.uuid}-main-deity`} value={profile.main_deity || ''} options={masters.deity}/>) : <Field key={key} label={label}><Input name={key} type={type} min={type === 'number' ? 0 : undefined} defaultValue={Array.isArray(profile[key]) ? profile[key].join(', ') : profile[key] || ''}/></Field>)}{listing.listing_type === 'temple' && <>{['Morning', 'Evening'].map(label => { const period = profile.opening_periods?.find(row => row.label === label); return ['opens', 'closes'].map(key => <Field key={`${label}-${key}`} label={`${label} ${key === 'opens' ? 'opening' : 'closing'} time`}><Input name={`${label}_${key}`} type="time" defaultValue={period?.[key] || ''}/></Field>) })}<div><span className="label">Sub-deities (multiple selection)</span><details><summary className="input cursor-pointer">Choose sub-deities</summary><div className="input mt-2 max-h-60 space-y-2 overflow-y-auto">{deityChoices.map((row, index) => <label key={row.code || row.custom_name} className="flex items-center gap-2"><input type="checkbox" name="deities" value={index} defaultChecked={(snapshot.deities || []).some(selected => !selected.is_primary && (row.code ? selected.code === row.code : selected.custom_name === row.custom_name))}/>{row.name}</label>)}</div></details></div></>}
+      {section === 'details' && <>{profiles[listing.listing_type].map(([key, label, type = 'text']) => key === 'main_deity' ? (masters.deity && <MainDeityField key={`${revision.uuid}-main-deity`} value={profile.main_deity || ''} options={masters.deity} error={deityError} onEdit={() => setDeityError('')}/>) : <Field key={key} label={label}><Input name={key} type={type} min={type === 'number' ? 0 : undefined} defaultValue={Array.isArray(profile[key]) ? profile[key].join(', ') : profile[key] || ''}/></Field>)}{listing.listing_type === 'temple' && <>{['Morning', 'Evening'].map(label => { const period = profile.opening_periods?.find(row => row.label === label); return ['opens', 'closes'].map(key => <Field key={`${label}-${key}`} label={`${label} ${key === 'opens' ? 'opening' : 'closing'} time`}><Input name={`${label}_${key}`} type="time" defaultValue={period?.[key] || ''}/></Field>) })}<div><span className="label">Sub-deities (multiple selection)</span><details><summary className="input cursor-pointer">Choose sub-deities</summary><div className="input mt-2 max-h-60 space-y-2 overflow-y-auto">{deityChoices.map((row, index) => <label key={row.code || row.custom_name} className="flex items-center gap-2"><input type="checkbox" name="deities" value={index} defaultChecked={(snapshot.deities || []).some(selected => !selected.is_primary && (row.code ? selected.code === row.code : selected.custom_name === row.custom_name))}/>{row.name}</label>)}</div></details></div></>}
         <Rows title="Nearby places" value={nearby} onChange={setNearby} fields={[["name_en", "Name"], ["distance_km", "Distance in km", "number"]]}/>
         {listing.listing_type === 'festival' && <Rows title="Programme" value={programmes} onChange={setProgrammes} fields={[["name_en", "Programme name"], ["date", "Date", "date"], ["start_time", "Starts", "time"], ["end_time", "Ends", "time"], ["performer", "Performer"], ["details", "Details"]]}/>}
         {listing.listing_type === 'service' && <Rows title="Services offered" value={offerings} onChange={setOfferings} fields={[["name_en", "Service name"], ["indicative_price_amount", "Indicative price", "number"], ["duration_text", "Duration"], ["availability_text", "Availability"]]}/>}</>}
       <div className="md:col-span-2"><button disabled={busy || (section === 'details' && listing.listing_type === 'temple' && !masters.deity)} className="btn-g">Save {section} section</button></div></form>)}
     <div className="card space-y-3 p-5"><h3 className="font-semibold">Gallery · optional</h3>{media.map(row => <div key={row.uuid} className="flex flex-wrap items-center gap-3 text-sm"><span>{row.caption || 'Listing image'} · {row.publication_state}</span>{row.preview_path && <button className="btn-g" disabled={busy} onClick={() => download(`me/listings/${listing.uuid}/media/${row.uuid}/file`, row.uuid)}>Download preview</button>}{row.public_url && <a href={row.public_url} target="_blank" rel="noopener noreferrer" className="btn-g">View approved image</a>}{editable && row.publication_state === 'approved' && <button disabled={busy} className="btn-g" onClick={() => action(() => clientApi(`${root}/revision`, { method: 'PATCH', body: { snapshot: { remove_media: [...new Set([...(snapshot.remove_media || []), row.uuid])] } } }))}>Request removal on approval</button>}{editable && row.publication_state === 'draft' && <button disabled={busy} className="btn-g" onClick={() => action(async () => { await clientApi(`${root}/media`, { method: 'DELETE', body: { uuid: row.uuid } }); await reloadFiles() })}>Remove draft image</button>}</div>)}{editable && <form onSubmit={event => upload(event, 'media')} className="space-y-3"><input ref={imageInput} type="file" name="file" accept="image/jpeg,image/png,image/webp" required onChange={event => { const file = event.target.files?.[0]; setPreview(file ? URL.createObjectURL(file) : '') }}/>{preview && <div className="space-y-2"><img src={preview} alt="Selected image preview" className="max-h-64 max-w-full rounded-xl object-contain"/><button type="button" className="btn-g" onClick={() => { if (imageInput.current) imageInput.current.value = ''; setPreview('') }}>Remove selected image</button></div>}<Input name="caption" placeholder="Image caption (optional)"/><Field label="Gallery order (0 is the cover)"><Input name="sort_order" type="number" min="0" defaultValue="0"/></Field><button disabled={busy} className="btn-g">Upload draft image</button></form>}</div>
     {revision?.can_access_private && <div className="card space-y-3 p-5"><h3 className="font-semibold">Private supporting documents · optional</h3>{documents.map(row => <div key={row.uuid} className="flex gap-3 text-sm"><span>{row.kind} · {row.review_status}</span><button disabled={busy} className="btn-g" onClick={() => download(`${root}/documents/${row.uuid}/file`, row.kind)}>Download</button>{!readOnly && row.review_status === 'submitted' && <button disabled={busy} className="btn-g" onClick={() => action(async () => { await clientApi(`${root}/documents`, { method: 'DELETE', body: { uuid: row.uuid } }); await reloadFiles() })}>Remove</button>}</div>)}{!readOnly && <form onSubmit={event => upload(event, 'documents')} className="space-y-3"><Input name="kind" placeholder="Document type, e.g. registration" required/><input type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" required/><button disabled={busy} className="btn-g">Upload private document</button></form>}</div>}
-    {editable && revision.status !== 'submitted' && <button disabled={busy} className="btn-p" onClick={() => action(() => clientApi(`${root}/submit`, { method: 'POST', body: {} }))}>Submit saved sections for staff review</button>}
+    {editable && revision.status !== 'submitted' && <button disabled={busy || (listing.listing_type === 'temple' && !masters.deity)} className="btn-p" onClick={submitSavedSections}>Submit saved sections for staff review</button>}
   </section>
 }
