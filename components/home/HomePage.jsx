@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, BadgeCheck, CalendarDays, CreditCard, Flame, HandHeart, Landmark, Languages, MapPin, MessageCircle, Quote, ReceiptText, ScrollText, Search, ShieldCheck, Smartphone, Sparkles, Star, Users } from 'lucide-react'
+import { ArrowRight, BadgeCheck, BookOpen, CalendarDays, CreditCard, ExternalLink, Flame, HandHeart, Landmark, Languages, MapPin, MessageCircle, Quote, ReceiptText, ScrollText, Search, ShieldCheck, Smartphone, Sparkles, Star, Users } from 'lucide-react'
 import { PublicShell, Photo } from '@/components/ui'
 import HomeSearch from './HomeSearch'
 import PublicText, { PublicMonth } from '@/components/PublicText'
@@ -84,6 +84,17 @@ function Hero({ images, counts }) {
       <h1 className="fade-up-1 mt-5 max-w-3xl text-4xl font-semibold leading-[1.08] md:text-6xl"><PublicText>Every temple.</PublicText> <span className="gold-text"><PublicText>One sacred address.</PublicText></span></h1>
       <p className="fade-up-2 mt-4 max-w-2xl text-base text-brown-100 md:text-lg"><PublicText>Discover verified temples, festivals and spiritual services across Kerala and beyond. Book poojas, give donations and get your receipt instantly — online, on WhatsApp or in our app.</PublicText></p>
       <HomeSearch/>
+      <a
+        href="https://web.templeaddress.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold-300 px-4 py-3 text-sm font-semibold text-brown-950 transition-colors hover:bg-gold-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-300 sm:w-auto"
+      >
+        <BookOpen size={18} className="shrink-0" aria-hidden="true"/>
+        <span><PublicText>Read the TempleAddress blog</PublicText></span>
+        <ExternalLink size={15} className="shrink-0" aria-hidden="true"/>
+        <span className="sr-only"> (opens in a new tab)</span>
+      </a>
       {stats.length > 0 && <dl className="mt-10 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">{stats.map(([value, label]) => <div key={label} className="glass rounded-2xl px-4 py-3"><dt className="text-xs text-brown-200"><PublicText>{label}</PublicText></dt><dd className="font-display text-2xl font-semibold text-white">{count(value)}+</dd></div>)}</dl>}
     </div>
   </section>
